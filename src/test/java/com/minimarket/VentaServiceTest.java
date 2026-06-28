@@ -11,6 +11,8 @@ import com.minimarket.service.impl.VentaServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -282,6 +284,46 @@ class VentaServiceTest {
 
         assertTrue(exception.getMessage().contains("modificado por otra operación simultánea"));
         // La venta nunca debe guardarse si el descuento de stock falla por concurrencia
+        verify(ventaRepository, never()).save(any(Venta.class));
+    }
+
+    // --- Pruebas paramétricas de límites de stock (retroalimentación del docente) ---
+
+    @ParameterizedTest(name = "stock={0}, cantidadVendida={1} -> debe permitir la venta")
+    @CsvSource({
+        "10, 10", // límite exacto
+        "10, 1",
+        "1, 1"
+    })
+    void testGuardarVenta_conCantidadEnElLimiteDeStock_esExitosa(int stock, int cantidadVendida) {
+        producto1.setStock(stock);
+        detalle1.setCantidad(cantidadVendida);
+        venta.setDetalles(Collections.singletonList(detalle1));
+
+        when(productoRepository.findById(1L)).thenReturn(Optional.of(producto1));
+        when(ventaRepository.save(any(Venta.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        Venta guardada = ventaService.save(venta);
+
+        assertNotNull(guardada);
+        assertEquals(stock - cantidadVendida, producto1.getStock());
+        verify(ventaRepository, times(1)).save(venta);
+    }
+
+    @ParameterizedTest(name = "stock={0}, cantidadVendida={1} -> debe rechazar por stock insuficiente")
+    @CsvSource({
+        "10, 11",
+        "1, 2",
+        "0, 1"
+    })
+    void testGuardarVenta_conCantidadSobreElLimiteDeStock_lanzaExcepcion(int stock, int cantidadVendida) {
+        producto1.setStock(stock);
+        detalle1.setCantidad(cantidadVendida);
+        venta.setDetalles(Collections.singletonList(detalle1));
+
+        when(productoRepository.findById(1L)).thenReturn(Optional.of(producto1));
+
+        assertThrows(RuntimeException.class, () -> ventaService.save(venta));
         verify(ventaRepository, never()).save(any(Venta.class));
     }
 
