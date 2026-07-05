@@ -2,6 +2,9 @@ package com.minimarket.controller;
 
 import com.minimarket.entity.Venta;
 import com.minimarket.service.VentaService;
+
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -11,6 +14,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/ventas")
+@Tag(name = "Ventas", description = "Gestión de las ventas del minimarket, incluyendo creación y listado de ventas.")
 public class VentaController {
 
     @Autowired

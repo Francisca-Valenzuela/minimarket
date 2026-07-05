@@ -2,6 +2,8 @@ package com.minimarket.controller;
 
 import com.minimarket.entity.Categoria;
 import com.minimarket.service.CategoriaService;
+
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -12,6 +14,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/categorias")
+@Tag(name = "Categorías", description = "Gestión de las categorías de productos del minimarket, incluyendo creación, actualización y eliminación.")
 public class CategoriaController {
 
     @Autowired

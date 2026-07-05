@@ -6,6 +6,8 @@ import com.minimarket.entity.Rol;
 import com.minimarket.entity.Usuario;
 import com.minimarket.service.RolService;
 import com.minimarket.service.UsuarioService;
+
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -20,6 +22,7 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/usuarios")
+@Tag(name = "Usuarios", description = "Gestión de los usuarios del minimarket, incluyendo creación, actualización y eliminación.")  
 public class UsuarioController {
 
     @Autowired

@@ -28,6 +28,7 @@ La calidad del código se valida con **160 pruebas unitarias e integración** di
 | Mockito | (incluido en spring-boot-starter-test) |
 | Spring Security Test | (spring-security-test) |
 | JaCoCo | 0.8.11 |
+| springdoc-openapi | 2.8.9 |
 
 ---
 
@@ -68,6 +69,19 @@ mvn spring-boot:run
 ```
 
 La aplicación levanta en `http://localhost:8080`.
+
+### 📖 Documentación de la API (Swagger / OpenAPI)
+
+Una vez levantado el proyecto, la documentación interactiva está disponible en:
+
+- **Swagger UI:** http://localhost:8080/swagger-ui.html
+- **JSON OpenAPI (para importar en Postman u otras herramientas):** http://localhost:8080/v3/api-docs
+
+Para probar los endpoints protegidos desde Swagger UI:
+1. Autentícate en `POST /api/auth/login` con un usuario válido.
+2. Copia el `token` de la respuesta.
+3. Haz clic en el botón **Authorize** (🔒) en la parte superior de Swagger UI e ingresa el token con el formato `Bearer <tu_token>`.
+4. Ya puedes ejecutar cualquier endpoint protegido directamente desde la interfaz.
 
 ### 4. Ejecutar pruebas y generar reporte de cobertura
 
@@ -235,6 +249,7 @@ src/
 │   ├── repository/                        # Repositorios Spring Data JPA
 │   ├── security/
 │   │   ├── config/SecurityConfig.java    # Spring Security + CORS parametrizado
+│   │   ├── config/OpenApiConfig.java     # Configuración de OpenAPI / Swagger UI
 │   │   ├── controller/AuthController.java # Login y registro
 │   │   ├── filter/JwtAuthFilter.java      # Filtro de validación JWT
 │   │   ├── model/                         # CustomUserDetails, LoginRequest
@@ -275,4 +290,4 @@ src/
 
 **PBY2202 – Desarrollo Backend II**  
 Duoc UC — Analista Programador Computacional  
-Semana 6 — Aplicando pruebas unitarias con JUnit y validando seguridad con Spring Security
+Semana 7 — Documentando microservicios con OpenAPI (springdoc-openapi + Swagger UI)

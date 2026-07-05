@@ -1,8 +1,13 @@
 package com.minimarket.controller;
 
+
+
 import com.minimarket.entity.Inventario;
 import com.minimarket.service.InventarioService;
+
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -13,6 +18,7 @@ import java.util.List;
 @Slf4j
 @RestController
 @RequestMapping("/api/inventario")
+@Tag(name = "Inventario", description = "Gestión del inventario del minimarket, incluyendo movimientos de stock.")
 public class InventarioController {
 
     @Autowired

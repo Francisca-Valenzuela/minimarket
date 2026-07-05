@@ -58,6 +58,7 @@ public class SecurityConfig {
                 .requestMatchers("/public/**").permitAll()
                 .requestMatchers("/h2-console/**").permitAll()
                 .requestMatchers("/error").permitAll()
+                .requestMatchers("/swagger-ui/**","/swagger-ui.html","/v3/api-docs/**", "/v3/api-docs.yaml").permitAll()
                 .requestMatchers("/api/detalle-ventas/**").hasAnyRole("EMPLEADO", "GERENTE")
                 .requestMatchers("/api/inventario/**").hasAnyRole("GERENTE", "EMPLEADO")
                 .requestMatchers("/api/ventas/**").hasAnyRole("GERENTE", "EMPLEADO")
@@ -65,6 +66,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/categorias/**").hasAnyRole("EMPLEADO", "GERENTE")
                 .requestMatchers("/api/carrito/**").hasAnyRole("CLIENTE", "EMPLEADO", "GERENTE")
                 .requestMatchers("/api/usuarios/**").hasRole("GERENTE")
+                .requestMatchers("/api/detalle-ventas/**").hasAnyRole("EMPLEADO", "GERENTE")
                 .anyRequest().authenticated()
             )
             .exceptionHandling(ex -> ex.authenticationEntryPoint(
