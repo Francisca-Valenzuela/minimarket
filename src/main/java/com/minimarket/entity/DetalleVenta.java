@@ -1,5 +1,7 @@
 package com.minimarket.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import jakarta.persistence.*;
 
 @Entity
@@ -9,6 +11,7 @@ public class DetalleVenta {
     private Long id;
 
     @ManyToOne
+    @JsonIgnore
     @JoinColumn(name = "venta_id", nullable = false)
     private Venta venta;
 

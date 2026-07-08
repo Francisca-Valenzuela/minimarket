@@ -1,24 +1,32 @@
 package com.minimarket.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.minimarket.entity.Categoria;
-import com.minimarket.service.CategoriaService;
+import java.util.List;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import static org.mockito.ArgumentMatchers.any;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.when;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.hateoas.EntityModel;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
-import java.util.List;
-
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.minimarket.assembler.CategoriaModelAssembler;
+import com.minimarket.entity.Categoria;
+import com.minimarket.service.CategoriaService;
 
 @ExtendWith(MockitoExtension.class)
 class CategoriaControllerTest {
@@ -34,6 +42,8 @@ class CategoriaControllerTest {
 
     private Categoria categoria;
 
+    @Mock private CategoriaModelAssembler assembler;
+
     @BeforeEach
     void setUp() {
         mockMvc = MockMvcBuilders.standaloneSetup(categoriaController).build();
@@ -42,6 +52,8 @@ class CategoriaControllerTest {
         categoria = new Categoria();
         categoria.setId(1L);
         categoria.setNombre("Bebidas");
+        lenient().when(assembler.toModel(any(Categoria.class)))
+         .thenAnswer(invocation -> EntityModel.of(invocation.getArgument(0)));
     }
 
     @Test
@@ -50,7 +62,7 @@ class CategoriaControllerTest {
 
         mockMvc.perform(get("/api/categorias")) // <--- Corregido
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].nombre").value("Bebidas"));
+                .andExpect(jsonPath("$.content[0].nombre").value("Bebidas"));
     }
 
     @Test
@@ -77,7 +89,7 @@ class CategoriaControllerTest {
         mockMvc.perform(post("/api/categorias")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(categoria)))
-                .andExpect(status().isOk())
+                .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.nombre").value("Bebidas"));
     }
 

@@ -43,7 +43,7 @@ class VentaControllerSecurityTest {
         mockMvc.perform(post("/api/ventas")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(venta)))
-                .andExpect(status().isOk());
+                .andExpect(status().isCreated());
     }
 
     @Test

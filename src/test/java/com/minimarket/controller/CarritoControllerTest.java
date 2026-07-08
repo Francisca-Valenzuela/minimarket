@@ -1,6 +1,7 @@
 package com.minimarket.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.minimarket.assembler.CarritoModelAssembler;
 import com.minimarket.entity.Carrito;
 import com.minimarket.service.CarritoService;
 import org.junit.jupiter.api.BeforeEach;
@@ -9,6 +10,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.hateoas.EntityModel;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -27,6 +29,7 @@ class CarritoControllerTest {
     private ObjectMapper objectMapper;
 
     @Mock private CarritoService carritoService;
+    @Mock private CarritoModelAssembler carritoModelAssembler;
 
     @InjectMocks
     private CarritoController carritoController;
@@ -41,6 +44,11 @@ class CarritoControllerTest {
         carrito = new Carrito();
         carrito.setId(1L);
         carrito.setCantidad(2);
+
+        // El assembler real se prueba de forma unitaria aparte; aquí solo se
+        // simula la conversión a EntityModel para evitar NullPointerException.
+        lenient().when(carritoModelAssembler.toModel(any(Carrito.class)))
+                .thenAnswer(invocation -> EntityModel.of(invocation.getArgument(0)));
     }
 
     @Test
@@ -70,7 +78,7 @@ class CarritoControllerTest {
         mockMvc.perform(post("/api/carrito")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(carrito)))
-                .andExpect(status().isOk());
+                .andExpect(status().isCreated()); 
     }
 
     @Test

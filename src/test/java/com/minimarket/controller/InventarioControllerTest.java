@@ -1,6 +1,7 @@
 package com.minimarket.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.minimarket.assembler.InventarioModelAssembler;
 import com.minimarket.entity.Inventario;
 import com.minimarket.entity.Producto;
 import com.minimarket.service.InventarioService;
@@ -10,6 +11,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.hateoas.EntityModel;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -29,6 +31,7 @@ class InventarioControllerTest {
     private ObjectMapper objectMapper;
 
     @Mock private InventarioService inventarioService;
+    @Mock private InventarioModelAssembler inventarioModelAssembler;
 
     @InjectMocks
     private InventarioController inventarioController;
@@ -49,6 +52,11 @@ class InventarioControllerTest {
         inventario.setCantidad(50);
         inventario.setTipoMovimiento("Entrada");
         inventario.setFechaMovimiento(new Date());
+
+        // El assembler real se prueba de forma unitaria aparte; aquí solo se
+        // simula la conversión a EntityModel para evitar NullPointerException.
+        lenient().when(inventarioModelAssembler.toModel(any(Inventario.class)))
+                .thenAnswer(invocation -> EntityModel.of(invocation.getArgument(0)));
     }
 
     @Test
@@ -78,7 +86,7 @@ class InventarioControllerTest {
         mockMvc.perform(post("/api/inventario")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(inventario)))
-                .andExpect(status().isOk());
+                .andExpect(status().isCreated());
     }
 
     @Test
@@ -88,7 +96,7 @@ class InventarioControllerTest {
         mockMvc.perform(post("/api/inventario")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(inventario)))
-                .andExpect(status().isOk());
+                .andExpect(status().isCreated());
     }
 
     @Test

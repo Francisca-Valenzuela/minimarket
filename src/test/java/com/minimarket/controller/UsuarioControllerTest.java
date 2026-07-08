@@ -1,7 +1,9 @@
 package com.minimarket.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.minimarket.assembler.UsuarioModelAssembler;
 import com.minimarket.dto.UsuarioRequestDTO;
+import com.minimarket.dto.UsuarioResponseDTO;
 import com.minimarket.entity.Rol;
 import com.minimarket.entity.Usuario;
 import com.minimarket.service.RolService;
@@ -12,6 +14,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.hateoas.EntityModel;
 import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
@@ -34,6 +37,7 @@ class UsuarioControllerTest {
     @Mock private UsuarioService usuarioService;
     @Mock private PasswordEncoder passwordEncoder;
     @Mock private RolService rolService;
+    @Mock private UsuarioModelAssembler usuarioModelAssembler;
 
     @InjectMocks
     private UsuarioController usuarioController;
@@ -45,6 +49,11 @@ class UsuarioControllerTest {
     void setUp() {
         mockMvc = MockMvcBuilders.standaloneSetup(usuarioController).build();
         objectMapper = new ObjectMapper();
+
+        // El assembler real se prueba de forma unitaria aparte; aquí solo se
+        // simula la conversión a EntityModel para evitar NullPointerException.
+        lenient().when(usuarioModelAssembler.toModel(any(UsuarioResponseDTO.class)))
+                .thenAnswer(invocation -> EntityModel.of(invocation.getArgument(0)));
 
         usuario = new Usuario();
         usuario.setId(1L);
@@ -68,7 +77,7 @@ class UsuarioControllerTest {
         when(usuarioService.findAll()).thenReturn(List.of(usuario));
         mockMvc.perform(get("/api/usuarios"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].username").value("test.user"));
+                .andExpect(jsonPath("$.content[0].username").value("test.user")); 
     }
 
     @Test
@@ -96,7 +105,7 @@ class UsuarioControllerTest {
         mockMvc.perform(post("/api/usuarios")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(dto)))
-                .andExpect(status().isOk());
+                .andExpect(status().isCreated());
     }
 
     @Test

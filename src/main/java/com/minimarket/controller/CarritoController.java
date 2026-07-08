@@ -1,5 +1,6 @@
 package com.minimarket.controller;
 
+import com.minimarket.assembler.CarritoModelAssembler;
 import com.minimarket.entity.Carrito;
 import com.minimarket.service.CarritoService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -12,11 +13,17 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.hateoas.CollectionModel;
+import org.springframework.hateoas.EntityModel;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.stream.Collectors;
+
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 
 @RestController
 @RequestMapping("/api/carrito")
@@ -27,9 +34,13 @@ public class CarritoController {
     @Autowired
     private CarritoService carritoService;
 
+    @Autowired
+    private CarritoModelAssembler carritoModelAssembler;
+
     @Operation(
         summary = "Listar todos los carritos",
-        description = "Retorna todos los registros de carrito existentes en el sistema."
+        description = "Retorna todos los registros de carrito existentes en el sistema, " +
+                "con enlaces HATEOAS a cada ítem y al producto asociado."
     )
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "Listado obtenido correctamente",
@@ -40,13 +51,19 @@ public class CarritoController {
     })
     @GetMapping
     @PreAuthorize("hasAnyRole('CLIENTE', 'EMPLEADO', 'GERENTE')")
-    public List<Carrito> listarCarrito() {
-        return carritoService.findAll();
+    public CollectionModel<EntityModel<Carrito>> listarCarrito() {
+        List<EntityModel<Carrito>> carritos = carritoService.findAll().stream()
+                .map(carritoModelAssembler::toModel)
+                .collect(Collectors.toList());
+
+        return CollectionModel.of(carritos,
+                linkTo(methodOn(CarritoController.class).listarCarrito()).withSelfRel());
     }
 
     @Operation(
         summary = "Obtener un carrito por ID",
-        description = "Busca un registro de carrito específico según su identificador."
+        description = "Busca un registro de carrito específico según su identificador y " +
+                "retorna sus enlaces HATEOAS (self, colección y producto asociado)."
     )
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "Carrito encontrado",
@@ -58,11 +75,14 @@ public class CarritoController {
     })
     @GetMapping("/{id}")
     @PreAuthorize("hasAnyRole('CLIENTE', 'EMPLEADO', 'GERENTE')")
-    public ResponseEntity<Carrito> obtenerCarritoPorId(
+    public ResponseEntity<EntityModel<Carrito>> obtenerCarritoPorId(
             @Parameter(description = "ID del carrito", example = "1", required = true)
             @PathVariable Long id) {
         Carrito carrito = carritoService.findById(id);
-        return (carrito != null) ? ResponseEntity.ok(carrito) : ResponseEntity.notFound().build();
+        if (carrito == null) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(carritoModelAssembler.toModel(carrito));
     }
 
     @Operation(
@@ -83,10 +103,14 @@ public class CarritoController {
     })
     @PostMapping
     @PreAuthorize("hasAnyRole('CLIENTE', 'EMPLEADO', 'GERENTE')")
-    public Carrito agregarProductoAlCarrito(
+    public ResponseEntity<EntityModel<Carrito>> agregarProductoAlCarrito(
             @Parameter(description = "Datos del carrito a crear", required = true)
             @RequestBody Carrito carrito) {
-        return carritoService.save(carrito);
+        Carrito guardado = carritoService.save(carrito);
+        EntityModel<Carrito> model = carritoModelAssembler.toModel(guardado);
+        return ResponseEntity
+                .created(linkTo(methodOn(CarritoController.class).obtenerCarritoPorId(guardado.getId())).toUri())
+                .body(model);
     }
 
     @Operation(
@@ -103,7 +127,7 @@ public class CarritoController {
     })
     @PutMapping("/{id}")
     @PreAuthorize("hasAnyRole('CLIENTE', 'EMPLEADO', 'GERENTE')")
-    public ResponseEntity<Carrito> actualizarCarrito(
+    public ResponseEntity<EntityModel<Carrito>> actualizarCarrito(
             @Parameter(description = "ID del carrito a actualizar", example = "1", required = true)
             @PathVariable Long id,
             @Parameter(description = "Nuevos datos del carrito", required = true)
@@ -111,7 +135,8 @@ public class CarritoController {
         Carrito existente = carritoService.findById(id);
         if (existente != null) {
             carrito.setId(id);
-            return ResponseEntity.ok(carritoService.save(carrito));
+            Carrito actualizado = carritoService.save(carrito);
+            return ResponseEntity.ok(carritoModelAssembler.toModel(actualizado));
         }
         return ResponseEntity.notFound().build();
     }

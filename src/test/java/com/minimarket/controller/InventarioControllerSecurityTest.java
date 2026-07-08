@@ -53,7 +53,7 @@ class InventarioControllerSecurityTest {
         mockMvc.perform(post("/api/inventario")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(inventario)))
-                .andExpect(status().isOk());
+                .andExpect(status().isCreated());
     }
 
     @Test

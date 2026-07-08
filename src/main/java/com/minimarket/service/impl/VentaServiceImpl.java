@@ -71,6 +71,8 @@ public class VentaServiceImpl implements VentaService {
             // de modo que pueda probarse y razonarse de forma independiente.
             descontarStock(producto, detalle.getCantidad());
 
+            detalle.setProducto(producto);
+
             // Sincronizar el precio unitario del detalle con el precio actual del producto en catálogo
             detalle.setPrecio(producto.getPrecio());
 

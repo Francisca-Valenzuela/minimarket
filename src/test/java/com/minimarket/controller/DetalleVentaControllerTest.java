@@ -12,6 +12,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.hateoas.EntityModel;
+import com.minimarket.assembler.DetalleVentaModelAssembler;
 
 import java.util.List;
 
@@ -32,6 +34,9 @@ class DetalleVentaControllerTest {
     private DetalleVentaController detalleVentaController;
 
     private DetalleVenta detalle;
+
+    @Mock 
+    private DetalleVentaModelAssembler assembler;
 
     @BeforeEach
     void setUp() {
@@ -71,7 +76,7 @@ class DetalleVentaControllerTest {
         mockMvc.perform(post("/api/detalle-ventas")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(detalle)))
-                .andExpect(status().isOk());
+                .andExpect(status().isCreated());
     }
 
     @Test

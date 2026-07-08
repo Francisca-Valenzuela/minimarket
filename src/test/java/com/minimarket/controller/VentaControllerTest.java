@@ -16,10 +16,13 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import org.springframework.hateoas.EntityModel;
+import com.minimarket.assembler.VentaModelAssembler;
 
 @ExtendWith(MockitoExtension.class)
 class VentaControllerTest {
@@ -34,6 +37,9 @@ class VentaControllerTest {
     private VentaController ventaController;
 
     private Venta venta;
+
+    @Mock
+    private VentaModelAssembler assembler;
 
     @BeforeEach
     void setUp() {
@@ -50,6 +56,8 @@ class VentaControllerTest {
 
         mockMvc.perform(get("/api/ventas"))
                 .andExpect(status().isOk());
+        lenient().when(assembler.toModel(any(Venta.class)))
+         .thenAnswer(invocation -> EntityModel.of(invocation.getArgument(0)));
     }
 
     @Test
@@ -75,6 +83,6 @@ class VentaControllerTest {
         mockMvc.perform(post("/api/ventas")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(venta)))
-                .andExpect(status().isOk());
+                .andExpect(status().isCreated());
     }
 }
