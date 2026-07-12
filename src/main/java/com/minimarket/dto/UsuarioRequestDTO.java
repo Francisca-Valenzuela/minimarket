@@ -1,43 +1,40 @@
 package com.minimarket.dto;
 
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Pattern;
-import jakarta.validation.constraints.Size;
-import lombok.Data;
+import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.*;
+import lombok.Getter;
+import lombok.Setter;
 
-@Data
+import java.util.Set;
+
+@Getter
+@Setter
+@Schema(description = "Datos requeridos para registrar o actualizar un usuario")
 public class UsuarioRequestDTO {
 
-    @NotBlank(message = "El username no puede estar vacío")
-    @Size(min = 3, max = 50, message = "El username debe tener entre 3 y 50 caracteres")
-    @Pattern(
-        regexp = "^[^<>\"'%;()&+]*$",
-        message = "El username contiene caracteres no permitidos"
-    )
+    @NotBlank
+    @Schema(description = "Nombre de usuario para login", example = "cliente")
     private String username;
 
-    @NotBlank(message = "La contraseña no puede estar vacía")
-    @Size(min = 6, max = 100, message = "La contraseña debe tener entre 6 y 100 caracteres")
+    @NotBlank @Size(min = 8, message = "La contraseña debe tener al menos 8 caracteres")
+    @Schema(description = "Contraseña en texto plano (se encripta antes de guardar). En actualizaciones, se puede omitir para no cambiarla.", example = "cliente123")
     private String password;
 
-    // ─────────────────────────────────────────────
-    // NUEVOS CAMPOS OBLIGATORIOS PARA EL REGISTRO DE USUARIOS
-    // ─────────────────────────────────────────────
-    @NotBlank(message = "El nombre no puede estar vacío")
-    @Size(max = 50, message = "El nombre no puede superar los 50 caracteres")
+    @NotBlank
+    @Schema(example = "Francisca")
     private String nombre;
 
-    @NotBlank(message = "El apellido no puede estar vacío")
-    @Size(max = 50, message = "El apellido no puede superar los 50 caracteres")
+    @NotBlank
+    @Schema(example = "Valenzuela")
     private String apellido;
 
-    @NotBlank(message = "El email no puede estar vacío")
-    @Email(message = "El formato del email es inválido")
-    @Size(max = 100, message = "El email no puede superar los 100 caracteres")
+    @NotBlank @Email
+    @Schema(example = "francisca.valenzuela@minimarket.cl")
     private String email;
 
-    @NotBlank(message = "La dirección no puede estar vacía")
-    @Size(max = 150, message = "La dirección no puede superar los 150 caracteres")
+    @Schema(example = "Av. Siempre Viva 742, Santiago")
     private String direccion;
+
+    @Schema(description = "Roles a asignar (opcional, solo lo puede definir un GERENTE). Si se omite, se asigna ROLE_CLIENTE por defecto.", example = "[\"ROLE_EMPLEADO\"]")
+    private Set<String> roles;
 }

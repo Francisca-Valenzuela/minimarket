@@ -1,28 +1,35 @@
 package com.minimarket.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 import jakarta.persistence.*;
 
 @Entity
+@Schema(description = "Línea de detalle de una venta: producto vendido, cantidad y precio unitario")
 public class DetalleVenta {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Schema(description = "Identificador único del detalle de venta", example = "1", accessMode = Schema.AccessMode.READ_ONLY)
     private Long id;
 
     @ManyToOne
     @JsonIgnore
     @JoinColumn(name = "venta_id", nullable = false)
+    @Schema(description = "Venta a la que pertenece este detalle (no se expone para evitar ciclos de serialización)", hidden = true)
     private Venta venta;
 
     @ManyToOne
     @JoinColumn(name = "producto_id", nullable = false)
+    @Schema(description = "Producto vendido en esta línea de detalle")
     private Producto producto;
 
     @Column(nullable = false)
+    @Schema(description = "Cantidad de unidades vendidas del producto", example = "2")
     private Integer cantidad;
 
     @Column(nullable = false)
+    @Schema(description = "Precio unitario del producto al momento de la venta", example = "1200.0")
     private Double precio;
 
     // Getters y Setters

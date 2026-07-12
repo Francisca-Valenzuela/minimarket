@@ -5,26 +5,30 @@ import com.minimarket.dto.UsuarioRequestDTO;
 import com.minimarket.dto.UsuarioResponseDTO;
 import com.minimarket.entity.Rol;
 import com.minimarket.entity.Usuario;
-import com.minimarket.service.RolService;
+import com.minimarket.repository.RolRepository;
 import com.minimarket.service.UsuarioService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+
 import jakarta.validation.Valid;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.EntityModel;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -34,8 +38,8 @@ import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 
 @RestController
-@RequestMapping("/api/usuarios")
-@Tag(name = "Usuarios", description = "Gestión de los usuarios del minimarket, incluyendo creación, actualización y eliminación.")
+@RequestMapping(value = "/api/usuarios", produces = { "application/hal+json", MediaType.APPLICATION_JSON_VALUE })
+@Tag(name = "Usuarios", description = "Gestión de cuentas y perfiles de usuario del sistema.")
 @SecurityRequirement(name = "bearerAuth")
 public class UsuarioController {
 
@@ -43,174 +47,149 @@ public class UsuarioController {
     private UsuarioService usuarioService;
 
     @Autowired
+    private UsuarioModelAssembler assembler;
+
+    @Autowired
+    private RolRepository rolRepository;
+
+    @Autowired
     private PasswordEncoder passwordEncoder;
 
-    @Autowired
-    private RolService rolService;
-
-    @Autowired
-    private UsuarioModelAssembler usuarioModelAssembler;
-
-    @Operation(
-        summary = "Listar todos los usuarios",
-        description = "Retorna el listado completo de usuarios registrados, con enlaces " +
-                "HATEOAS a cada usuario y a la colección. Requiere rol GERENTE."
-    )
+    @Operation(summary = "Listar todos los usuarios", description = "Devuelve una lista con todos los usuarios registrados y sus enlaces HATEOAS.")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "Listado obtenido correctamente",
-            content = @Content(mediaType = "application/json",
-                schema = @Schema(implementation = UsuarioResponseDTO.class))),
-        @ApiResponse(responseCode = "401", description = "No autenticado"),
-        @ApiResponse(responseCode = "403", description = "Sin permisos suficientes (requiere rol GERENTE)")
+            content = @Content(mediaType = "application/hal+json",
+                array = @ArraySchema(schema = @Schema(implementation = UsuarioResponseDTO.class)))),
+        @ApiResponse(responseCode = "401", description = "No autenticado", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE)),
+        @ApiResponse(responseCode = "403", description = "Sin permisos suficientes", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE))
     })
     @GetMapping
+    @PreAuthorize("hasRole('GERENTE')")
     public CollectionModel<EntityModel<UsuarioResponseDTO>> listarUsuarios() {
         List<EntityModel<UsuarioResponseDTO>> usuarios = usuarioService.findAll().stream()
-                .map(this::mapToResponseDTO)
-                .map(usuarioModelAssembler::toModel)
+                .map(assembler::toModel)
                 .collect(Collectors.toList());
-
-        return CollectionModel.of(usuarios,
-                linkTo(methodOn(UsuarioController.class).listarUsuarios()).withSelfRel());
+        return CollectionModel.of(usuarios, linkTo(methodOn(UsuarioController.class).listarUsuarios()).withSelfRel());
     }
 
-    @Operation(
-        summary = "Obtener un usuario por ID",
-        description = "Busca un usuario específico según su identificador y retorna sus " +
-                "enlaces HATEOAS (self y colección de usuarios). Requiere rol GERENTE."
-    )
-    @ApiResponses(value = {
+    @Operation(summary = "Obtener usuario por ID")
+    @ApiResponses({
         @ApiResponse(responseCode = "200", description = "Usuario encontrado",
-            content = @Content(mediaType = "application/json",
-                schema = @Schema(implementation = UsuarioResponseDTO.class))),
-        @ApiResponse(responseCode = "404", description = "Usuario no encontrado", content = @Content),
-        @ApiResponse(responseCode = "401", description = "No autenticado"),
-        @ApiResponse(responseCode = "403", description = "Sin permisos suficientes (requiere rol GERENTE)")
+            content = @Content(mediaType = "application/hal+json", schema = @Schema(implementation = UsuarioResponseDTO.class))),
+        @ApiResponse(responseCode = "404", description = "Usuario no encontrado", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE)),
+        @ApiResponse(responseCode = "401", description = "No autenticado", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE)),
+        @ApiResponse(responseCode = "403", description = "Sin permisos", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE))
     })
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('GERENTE', 'EMPLEADO')")
     public ResponseEntity<EntityModel<UsuarioResponseDTO>> obtenerUsuarioPorId(
-            @Parameter(description = "ID del usuario", example = "1", required = true)
+            @Parameter(description = "Identificador único del usuario", example = "1", required = true)
             @PathVariable Long id) {
-        return usuarioService.findById(id)
-                .map(usuario -> ResponseEntity.ok(usuarioModelAssembler.toModel(mapToResponseDTO(usuario))))
-                .orElseGet(() -> ResponseEntity.notFound().build());
+
+        Optional<Usuario> usuario = usuarioService.findById(id);
+        if (usuario.isEmpty()) return ResponseEntity.notFound().build();
+
+        return ResponseEntity.ok(assembler.toModel(usuario.get()));
     }
 
-    @Operation(
-        summary = "Crear un nuevo usuario",
-        description = "Registra un nuevo usuario con rol CLIENTE por defecto. Requiere rol GERENTE."
-    )
-    @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Usuario creado correctamente",
-            content = @Content(mediaType = "application/json",
-                schema = @Schema(implementation = UsuarioResponseDTO.class))),
-        @ApiResponse(responseCode = "400", description = "Datos inválidos o usuario ya existente"),
-        @ApiResponse(responseCode = "401", description = "No autenticado"),
-        @ApiResponse(responseCode = "403", description = "Sin permisos suficientes (requiere rol GERENTE)")
+    @Operation(summary = "Registrar nuevo usuario", description = "Solo un GERENTE puede crear usuarios directamente (empleados u otros gerentes). Si no se especifican roles, se asigna ROLE_CLIENTE por defecto.")
+    @ApiResponses({
+        @ApiResponse(responseCode = "201", description = "Usuario creado exitosamente",
+            content = @Content(mediaType = "application/hal+json", schema = @Schema(implementation = UsuarioResponseDTO.class))),
+        @ApiResponse(responseCode = "400", description = "Datos inválidos", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE)),
+        @ApiResponse(responseCode = "401", description = "No autenticado", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE)),
+        @ApiResponse(responseCode = "403", description = "Sin permisos suficientes", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE))
     })
     @PostMapping
-    public ResponseEntity<?> guardarUsuario(
+    @PreAuthorize("hasRole('GERENTE')")
+    public ResponseEntity<EntityModel<UsuarioResponseDTO>> guardarUsuario(
             @Parameter(description = "Datos del usuario a crear", required = true)
-            @Valid @RequestBody UsuarioRequestDTO dto) {
-        if (usuarioService.findByUsername(dto.getUsername()).isPresent()) {
-            return ResponseEntity.badRequest().body("El usuario ya existe");
-        }
+            @Valid @RequestBody UsuarioRequestDTO request) {
 
         Usuario usuario = new Usuario();
-        usuario.setUsername(dto.getUsername());
-        usuario.setPassword(passwordEncoder.encode(dto.getPassword()));
-
-        // Mapeo de los nuevos campos obligatorios
-        usuario.setNombre(dto.getNombre());
-        usuario.setApellido(dto.getApellido());
-        usuario.setEmail(dto.getEmail());
-        usuario.setDireccion(dto.getDireccion());
-
-        Rol rolCliente = rolService.findByNombre("ROLE_CLIENTE")
-                .orElseThrow(() -> new RuntimeException("Rol no encontrado en el sistema"));
-
-        Set<Rol> roles = new HashSet<>();
-        roles.add(rolCliente);
-        usuario.setRoles(roles);
+        usuario.setUsername(request.getUsername());
+        usuario.setPassword(passwordEncoder.encode(request.getPassword()));
+        usuario.setNombre(request.getNombre());
+        usuario.setApellido(request.getApellido());
+        usuario.setEmail(request.getEmail());
+        usuario.setDireccion(request.getDireccion());
+        usuario.setRoles(resolveRoles(request.getRoles()));
 
         Usuario guardado = usuarioService.save(usuario);
-        EntityModel<UsuarioResponseDTO> model = usuarioModelAssembler.toModel(mapToResponseDTO(guardado));
-
         return ResponseEntity
                 .created(linkTo(methodOn(UsuarioController.class).obtenerUsuarioPorId(guardado.getId())).toUri())
-                .body(model);
+                .body(assembler.toModel(guardado));
     }
 
-    @Operation(
-        summary = "Actualizar un usuario existente",
-        description = "Modifica los datos de un usuario ya registrado. Requiere rol GERENTE."
-    )
-    @ApiResponses(value = {
+    @Operation(summary = "Actualizar usuario", description = "La contraseña y los roles son opcionales: si se omiten, se conservan los valores actuales.")
+    @ApiResponses({
         @ApiResponse(responseCode = "200", description = "Usuario actualizado correctamente",
-            content = @Content(mediaType = "application/json",
-                schema = @Schema(implementation = UsuarioResponseDTO.class))),
-        @ApiResponse(responseCode = "404", description = "Usuario no encontrado", content = @Content),
-        @ApiResponse(responseCode = "401", description = "No autenticado"),
-        @ApiResponse(responseCode = "403", description = "Sin permisos suficientes (requiere rol GERENTE)")
+            content = @Content(mediaType = "application/hal+json", schema = @Schema(implementation = UsuarioResponseDTO.class))),
+        @ApiResponse(responseCode = "404", description = "Usuario no encontrado", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE)),
+        @ApiResponse(responseCode = "401", description = "No autenticado", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE)),
+        @ApiResponse(responseCode = "403", description = "Sin permisos", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE))
     })
     @PutMapping("/{id}")
-    public ResponseEntity<?> actualizarUsuario(
-            @Parameter(description = "ID del usuario a actualizar", example = "1", required = true)
+    @PreAuthorize("hasRole('GERENTE')")
+    public ResponseEntity<EntityModel<UsuarioResponseDTO>> actualizarUsuario(
+            @Parameter(description = "ID del usuario a modificar", example = "1", required = true)
             @PathVariable Long id,
             @Parameter(description = "Nuevos datos del usuario", required = true)
-            @Valid @RequestBody UsuarioRequestDTO dto) {
-        Optional<Usuario> usuarioExistente = usuarioService.findById(id);
-        if (usuarioExistente.isPresent()) {
-            Usuario usuario = usuarioExistente.get();
-            usuario.setUsername(dto.getUsername());
+            @Valid @RequestBody UsuarioRequestDTO request) {
 
-            // Actualización de los nuevos campos obligatorios
-            usuario.setNombre(dto.getNombre());
-            usuario.setApellido(dto.getApellido());
-            usuario.setEmail(dto.getEmail());
-            usuario.setDireccion(dto.getDireccion());
+        Optional<Usuario> existenteOpt = usuarioService.findById(id);
+        if (existenteOpt.isEmpty()) return ResponseEntity.notFound().build();
 
-            if (dto.getPassword() != null && !dto.getPassword().trim().isEmpty()) {
-                usuario.setPassword(passwordEncoder.encode(dto.getPassword()));
-            }
+        Usuario existente = existenteOpt.get();
+        existente.setUsername(request.getUsername());
+        existente.setNombre(request.getNombre());
+        existente.setApellido(request.getApellido());
+        existente.setEmail(request.getEmail());
+        existente.setDireccion(request.getDireccion());
 
-            Usuario actualizado = usuarioService.save(usuario);
-            return ResponseEntity.ok(usuarioModelAssembler.toModel(mapToResponseDTO(actualizado)));
+        if (request.getPassword() != null && !request.getPassword().isBlank()) {
+            existente.setPassword(passwordEncoder.encode(request.getPassword()));
         }
-        return ResponseEntity.notFound().build();
+        if (request.getRoles() != null && !request.getRoles().isEmpty()) {
+            existente.setRoles(resolveRoles(request.getRoles()));
+        }
+
+        return ResponseEntity.ok(assembler.toModel(usuarioService.save(existente)));
     }
 
-    @Operation(
-        summary = "Eliminar un usuario",
-        description = "Elimina un usuario según su ID. Requiere rol GERENTE."
-    )
-    @ApiResponses(value = {
-        @ApiResponse(responseCode = "204", description = "Usuario eliminado correctamente", content = @Content),
-        @ApiResponse(responseCode = "404", description = "Usuario no encontrado", content = @Content),
-        @ApiResponse(responseCode = "401", description = "No autenticado"),
-        @ApiResponse(responseCode = "403", description = "Sin permisos suficientes (requiere rol GERENTE)")
+    @Operation(summary = "Eliminar usuario")
+    @ApiResponses({
+        @ApiResponse(responseCode = "204", description = "Usuario eliminado correctamente"),
+        @ApiResponse(responseCode = "404", description = "Usuario no encontrado", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE)),
+        @ApiResponse(responseCode = "401", description = "No autenticado", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE)),
+        @ApiResponse(responseCode = "403", description = "Sin permisos suficientes", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE))
     })
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('GERENTE')")
     public ResponseEntity<Void> eliminarUsuario(
             @Parameter(description = "ID del usuario a eliminar", example = "1", required = true)
             @PathVariable Long id) {
-        Optional<Usuario> usuario = usuarioService.findById(id);
-        if (usuario.isPresent()) {
+
+        Optional<Usuario> existente = usuarioService.findById(id);
+        if (existente.isPresent()) {
             usuarioService.deleteById(id);
             return ResponseEntity.noContent().build();
         }
         return ResponseEntity.notFound().build();
     }
 
-    private UsuarioResponseDTO mapToResponseDTO(Usuario usuario) {
-        UsuarioResponseDTO dto = new UsuarioResponseDTO();
-        dto.setId(usuario.getId());
-        dto.setUsername(usuario.getUsername());
-        if (usuario.getRoles() != null) {
-            dto.setRoles(usuario.getRoles().stream()
-                    .map(Rol::getNombre)
-                    .collect(Collectors.toSet()));
-        }
-        return dto;
+    /**
+     * Resuelve nombres de rol (ej. "ROLE_EMPLEADO") a entidades Rol existentes.
+     * Si no se especifica ninguno, asigna ROLE_CLIENTE por defecto.
+     */
+    private Set<Rol> resolveRoles(Set<String> nombresRoles) {
+        Set<String> nombres = (nombresRoles == null || nombresRoles.isEmpty())
+                ? Set.of("ROLE_CLIENTE")
+                : nombresRoles;
+
+        return nombres.stream()
+                .map(nombre -> rolRepository.findByNombre(nombre)
+                        .orElseThrow(() -> new IllegalArgumentException("Rol no encontrado: " + nombre)))
+                .collect(Collectors.toSet());
     }
 }

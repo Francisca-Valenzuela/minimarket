@@ -5,6 +5,7 @@ import com.minimarket.entity.Carrito;
 import com.minimarket.service.CarritoService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -15,6 +16,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.EntityModel;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -26,7 +28,7 @@ import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 
 @RestController
-@RequestMapping("/api/carrito")
+@RequestMapping(value = "/api/carrito", produces = { "application/hal+json", MediaType.APPLICATION_JSON_VALUE })
 @Tag(name = "Carrito", description = "Gestión del carrito de compras de los clientes")
 @SecurityRequirement(name = "bearerAuth")
 public class CarritoController {
@@ -39,15 +41,14 @@ public class CarritoController {
 
     @Operation(
         summary = "Listar todos los carritos",
-        description = "Retorna todos los registros de carrito existentes en el sistema, " +
-                "con enlaces HATEOAS a cada ítem y al producto asociado."
+        description = "Retorna todos los registros de carrito existentes en el sistema, con enlaces HATEOAS a cada ítem y al producto asociado."
     )
-    @ApiResponses(value = {
+    @ApiResponses(value = {        
         @ApiResponse(responseCode = "200", description = "Listado obtenido correctamente",
-            content = @Content(mediaType = "application/json",
-                schema = @Schema(implementation = Carrito.class))),
-        @ApiResponse(responseCode = "401", description = "No autenticado"),
-        @ApiResponse(responseCode = "403", description = "Sin permisos suficientes")
+            content = @Content(mediaType = "application/hal+json",
+                array = @ArraySchema(schema = @Schema(implementation = Carrito.class)))),
+        @ApiResponse(responseCode = "401", description = "No autenticado", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE)),
+        @ApiResponse(responseCode = "403", description = "Sin permisos suficientes", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE))
     })
     @GetMapping
     @PreAuthorize("hasAnyRole('CLIENTE', 'EMPLEADO', 'GERENTE')")
@@ -62,21 +63,20 @@ public class CarritoController {
 
     @Operation(
         summary = "Obtener un carrito por ID",
-        description = "Busca un registro de carrito específico según su identificador y " +
-                "retorna sus enlaces HATEOAS (self, colección y producto asociado)."
+        description = "Busca un registro de carrito específico según su identificador y retorna sus enlaces HATEOAS (self, colección y producto asociado)."
     )
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "Carrito encontrado",
-            content = @Content(mediaType = "application/json",
+            content = @Content(mediaType = "application/hal+json",
                 schema = @Schema(implementation = Carrito.class))),
-        @ApiResponse(responseCode = "404", description = "Carrito no encontrado", content = @Content),
-        @ApiResponse(responseCode = "401", description = "No autenticado"),
-        @ApiResponse(responseCode = "403", description = "Sin permisos suficientes")
+        @ApiResponse(responseCode = "404", description = "Carrito no encontrado", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE)),
+        @ApiResponse(responseCode = "401", description = "No autenticado", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE)),
+        @ApiResponse(responseCode = "403", description = "Sin permisos suficientes", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE))
     })
     @GetMapping("/{id}")
     @PreAuthorize("hasAnyRole('CLIENTE', 'EMPLEADO', 'GERENTE')")
     public ResponseEntity<EntityModel<Carrito>> obtenerCarritoPorId(
-            @Parameter(description = "ID del carrito", example = "1", required = true)
+            @Parameter(description = "Identificador único del registro en el carrito", example = "1", required = true)
             @PathVariable Long id) {
         Carrito carrito = carritoService.findById(id);
         if (carrito == null) {
@@ -90,21 +90,21 @@ public class CarritoController {
         description = "Crea un nuevo registro de carrito asociando un usuario, un producto y una cantidad."
     )
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Producto agregado correctamente",
-            content = @Content(mediaType = "application/json",
+        @ApiResponse(responseCode = "201", description = "Producto agregado correctamente",
+            content = @Content(mediaType = "application/hal+json",
                 schema = @Schema(implementation = Carrito.class),
                 examples = @ExampleObject(
-                    name = "Ejemplo de carrito",
+                    name = "Ejemplo de payload para nuevo carrito",
                     value = "{\"usuario\": {\"id\": 1}, \"producto\": {\"id\": 3}, \"cantidad\": 2}"
                 ))),
-        @ApiResponse(responseCode = "400", description = "Datos inválidos"),
-        @ApiResponse(responseCode = "401", description = "No autenticado"),
-        @ApiResponse(responseCode = "403", description = "Sin permisos suficientes")
+        @ApiResponse(responseCode = "400", description = "Datos inválidos", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE)),
+        @ApiResponse(responseCode = "401", description = "No autenticado", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE)),
+        @ApiResponse(responseCode = "403", description = "Sin permisos suficientes", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE))
     })
     @PostMapping
     @PreAuthorize("hasAnyRole('CLIENTE', 'EMPLEADO', 'GERENTE')")
     public ResponseEntity<EntityModel<Carrito>> agregarProductoAlCarrito(
-            @Parameter(description = "Datos del carrito a crear", required = true)
+            @Parameter(description = "Objeto con los datos del carrito a crear", required = true)
             @RequestBody Carrito carrito) {
         Carrito guardado = carritoService.save(carrito);
         EntityModel<Carrito> model = carritoModelAssembler.toModel(guardado);
@@ -119,18 +119,18 @@ public class CarritoController {
     )
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "Carrito actualizado correctamente",
-            content = @Content(mediaType = "application/json",
+            content = @Content(mediaType = "application/hal+json",
                 schema = @Schema(implementation = Carrito.class))),
-        @ApiResponse(responseCode = "404", description = "Carrito no encontrado", content = @Content),
-        @ApiResponse(responseCode = "401", description = "No autenticado"),
-        @ApiResponse(responseCode = "403", description = "Sin permisos suficientes")
+        @ApiResponse(responseCode = "404", description = "Carrito no encontrado", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE)),
+        @ApiResponse(responseCode = "401", description = "No autenticado", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE)),
+        @ApiResponse(responseCode = "403", description = "Sin permisos suficientes", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE))
     })
     @PutMapping("/{id}")
     @PreAuthorize("hasAnyRole('CLIENTE', 'EMPLEADO', 'GERENTE')")
     public ResponseEntity<EntityModel<Carrito>> actualizarCarrito(
-            @Parameter(description = "ID del carrito a actualizar", example = "1", required = true)
+            @Parameter(description = "Identificador único del registro a actualizar", example = "1", required = true)
             @PathVariable Long id,
-            @Parameter(description = "Nuevos datos del carrito", required = true)
+            @Parameter(description = "Nuevos datos de actualización", required = true)
             @RequestBody Carrito carrito) {
         Carrito existente = carritoService.findById(id);
         if (existente != null) {
@@ -146,15 +146,16 @@ public class CarritoController {
         description = "Elimina un registro de carrito según su ID. Requiere rol EMPLEADO o GERENTE."
     )
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "204", description = "Carrito eliminado correctamente", content = @Content),
-        @ApiResponse(responseCode = "404", description = "Carrito no encontrado", content = @Content),
-        @ApiResponse(responseCode = "401", description = "No autenticado"),
-        @ApiResponse(responseCode = "403", description = "Sin permisos suficientes (requiere rol EMPLEADO o GERENTE)")
+        
+        @ApiResponse(responseCode = "204", description = "Carrito eliminado correctamente"),
+        @ApiResponse(responseCode = "404", description = "Carrito no encontrado", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE)),
+        @ApiResponse(responseCode = "401", description = "No autenticado", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE)),
+        @ApiResponse(responseCode = "403", description = "Sin permisos suficientes", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE))
     })
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAnyRole('EMPLEADO', 'GERENTE')")
     public ResponseEntity<Void> eliminarProductoDelCarrito(
-            @Parameter(description = "ID del carrito a eliminar", example = "1", required = true)
+            @Parameter(description = "Identificador del registro a eliminar", example = "1", required = true)
             @PathVariable Long id) {
         Carrito carrito = carritoService.findById(id);
         if (carrito != null) {

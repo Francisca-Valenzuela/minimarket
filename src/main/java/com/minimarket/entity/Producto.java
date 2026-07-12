@@ -1,30 +1,36 @@
 package com.minimarket.entity;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.*;
 
 @Entity
+@Schema(description = "Entidad que representa un producto disponible para la venta")
 public class Producto {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Schema(description = "Identificador único del producto", example = "3")
     private Long id;
 
     @Column(nullable = false)
+    @Schema(description = "Nombre comercial del producto", example = "Leche Entera 1L")
     private String nombre;
 
     @Column(nullable = false)
+    @Schema(description = "Precio unitario del producto en pesos", example = "1200.0")
     private Double precio;
 
     @Column(nullable = false)
+    @Schema(description = "Cantidad de unidades disponibles en el inventario", example = "50")
     private Integer stock;
 
-    // Control de concurrencia optimista: JPA incrementa esta versión en cada
-    // UPDATE y lanza OptimisticLockingFailureException si dos transacciones
-    // intentan modificar el mismo producto (p.ej. descontar stock) a la vez.
     @Version
-    private Long version;
+    @Schema(description = "Control de concurrencia optimista (uso interno)", example = "0")
+    private Integer version;
 
     @ManyToOne
     @JoinColumn(name = "categoria_id", nullable = false)
+    @Schema(description = "Categoría a la cual pertenece el producto")
     private Categoria categoria;
 
     // Getters y Setters
@@ -60,12 +66,12 @@ public class Producto {
         this.stock = stock;
     }
 
-    public Long getVersion() {
+    public Integer getVersion() {
         return version;
     }
 
-    public void setVersion(Long version) {
-        this.version = version;
+    public void setVersion(Integer version) { 
+        this.version = version; 
     }
 
     public Categoria getCategoria() {

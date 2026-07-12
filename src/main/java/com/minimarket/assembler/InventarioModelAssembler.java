@@ -20,8 +20,8 @@ public class InventarioModelAssembler implements RepresentationModelAssembler<In
     @Override
     public EntityModel<Inventario> toModel(Inventario inventario) {
         EntityModel<Inventario> model = EntityModel.of(inventario,
-                linkTo(methodOn(InventarioController.class).obtenerMovimientoPorId(inventario.getId())).withSelfRel(),
-                linkTo(methodOn(InventarioController.class).listarMovimientosDeInventario()).withRel("movimientos-inventario"));
+                linkTo(methodOn(InventarioController.class).obtenerInventarioPorId(inventario.getId())).withSelfRel(),
+                linkTo(methodOn(InventarioController.class).listarInventario()).withRel("movimientos-inventario"));
 
         if (inventario.getProducto() != null) {
             model.add(linkTo(methodOn(ProductoController.class)

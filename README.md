@@ -1,7 +1,7 @@
-# 🛒 MiniMarket Plus — Backend con Spring Security + JWT + Pruebas Unitarias
+# 🛒 MiniMarket Plus — Backend con Spring Security + JWT + OpenAPI + HATEOAS
 
 Proyecto backend de la cadena de minimarkets **MiniMarket Plus**, implementado con Spring Boot.  
-Incluye autenticación JWT, autorización basada en roles, protección contra amenazas comunes y un suite completo de pruebas unitarias con JaCoCo.
+Incluye autenticación JWT, autorización basada en roles, documentación interactiva con OpenAPI/Swagger, navegación hipermedia con HATEOAS, protección contra amenazas comunes y un suite completo de pruebas unitarias con JaCoCo.
 
 ---
 
@@ -9,6 +9,7 @@ Incluye autenticación JWT, autorización basada en roles, protección contra am
 
 Sistema de gestión para minimarket que cubre inventario, productos, ventas, carritos y usuarios.  
 La seguridad está implementada con **Spring Security + JWT (JJWT 0.12.3)**, arquitectura **stateless** y control de acceso por roles mediante `@PreAuthorize`.  
+Todos los endpoints están documentados con **springdoc-openapi** (esquemas, ejemplos, códigos de error) y las respuestas incluyen enlaces **HATEOAS** (`_links`) para que un cliente pueda navegar entre recursos relacionados sin conocer de antemano la estructura de URLs.  
 La calidad del código se valida con **160 pruebas unitarias e integración** distribuidas en 24 clases de test, con cobertura >90% medida con JaCoCo.
 
 ---
@@ -20,6 +21,7 @@ La calidad del código se valida con **160 pruebas unitarias e integración** di
 | Java | 17 |
 | Spring Boot | 3.4.1 |
 | Spring Security | (incluido en Boot) |
+| Spring HATEOAS | (spring-boot-starter-hateoas) |
 | JJWT | 0.12.3 |
 | H2 Database | (en memoria) |
 | Lombok | (incluido en Boot) |
@@ -41,7 +43,7 @@ La calidad del código se valida con **160 pruebas unitarias e integración** di
 ### 1. Clonar el repositorio
 
 ```bash
-git clone https://github.com/<tu-usuario>/minimarket.git
+git clone https://github.com/Francisca-Valenzuela/minimarket.git
 cd minimarket
 ```
 
@@ -82,6 +84,26 @@ Para probar los endpoints protegidos desde Swagger UI:
 2. Copia el `token` de la respuesta.
 3. Haz clic en el botón **Authorize** (🔒) en la parte superior de Swagger UI e ingresa el token con el formato `Bearer <tu_token>`.
 4. Ya puedes ejecutar cualquier endpoint protegido directamente desde la interfaz.
+
+### 🔗 Navegación HATEOAS
+
+Las respuestas de los endpoints de colección y de recurso individual incluyen un bloque `_links` con las rutas relacionadas, siguiendo el formato HAL (`application/hal+json`). Por ejemplo, al consultar un carrito:
+
+```json
+{
+  "id": 3,
+  "cantidad": 2,
+  "_links": {
+    "self": { "href": "http://localhost:8080/api/carrito/3" },
+    "producto": { "href": "http://localhost:8080/api/productos/7" },
+    "carritos": { "href": "http://localhost:8080/api/carrito" }
+  }
+}
+```
+
+Esto permite a un cliente descubrir y navegar los recursos relacionados (por ejemplo, el producto asociado a un ítem del carrito) siguiendo los enlaces en vez de construir URLs manualmente. Los enlaces se generan con `linkTo(methodOn(...))` en clases `*ModelAssembler` dedicadas, por lo que si cambia la ruta de un endpoint, el enlace se actualiza automáticamente o falla en tiempo de compilación.
+
+> ⚠️ El archivo `openapi.json` de la raíz del proyecto **no se regenera solo**. Si modificas anotaciones OpenAPI (`@Schema`, `@ApiResponses`, etc.), vuelve a exportarlo desde `http://localhost:8080/v3/api-docs` con la app corriendo antes de subir cambios, para que no quede desactualizado respecto al código.
 
 ### 4. Ejecutar pruebas y generar reporte de cobertura
 
@@ -160,6 +182,28 @@ Content-Type: application/json
 ```
 
 Asigna `ROLE_CLIENTE` por defecto.
+
+### Crear usuario como GERENTE
+
+A diferencia de `/api/auth/registro` (público, siempre asigna `ROLE_CLIENTE`), un usuario con `ROLE_GERENTE` puede crear cuentas con cualquier rol desde `POST /api/usuarios`, incluyendo el campo opcional `roles`:
+
+```
+POST /api/usuarios
+Authorization: Bearer <token-de-gerente>
+Content-Type: application/json
+
+{
+  "username": "nuevo_empleado",
+  "password": "empleado123",
+  "nombre": "Ana",
+  "apellido": "Soto",
+  "email": "ana.soto@minimarket.cl",
+  "direccion": "Av. Siempre Viva 742",
+  "roles": ["ROLE_EMPLEADO"]
+}
+```
+
+Si se omite `roles`, se asigna `ROLE_CLIENTE` por defecto, igual que en el registro público. La respuesta usa `UsuarioResponseDTO` (sin exponer el password) con sus enlaces HATEOAS correspondientes.
 
 ---
 
@@ -290,4 +334,4 @@ src/
 
 **PBY2202 – Desarrollo Backend II**  
 Duoc UC — Analista Programador Computacional  
-Semana 7 — Documentando microservicios con OpenAPI (springdoc-openapi + Swagger UI)
+Semana 8 — Integrando seguridad en aplicaciones Backend: OpenAPI (springdoc-openapi + Swagger UI) y HATEOAS

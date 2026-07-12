@@ -1,21 +1,24 @@
 package com.minimarket.entity;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.*;
 import java.util.Set;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-
 @Entity
+@Schema(description = "Entidad que representa un rol de seguridad en el sistema")
 public class Rol {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Schema(description = "Identificador único del rol", example = "3")
     private Long id;
 
     @Column(nullable = false, unique = true)
+    @Schema(description = "Nombre del rol (debe iniciar obligatoriamente con ROLE_)", example = "ROLE_CLIENTE")
     private String nombre;
 
-    @JsonIgnore
     @ManyToMany(mappedBy = "roles")
+    @Schema(hidden = true) // Lo ocultamos para que Swagger no haga un bucle infinito mostrando a los usuarios
     private Set<Usuario> usuarios;
 
     // Getters y Setters

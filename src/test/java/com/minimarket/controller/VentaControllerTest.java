@@ -1,6 +1,7 @@
 package com.minimarket.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.minimarket.dto.VentaResponseDTO; 
 import com.minimarket.entity.Venta;
 import com.minimarket.service.VentaService;
 import org.junit.jupiter.api.BeforeEach;
@@ -48,6 +49,10 @@ class VentaControllerTest {
         
         venta = new Venta();
         venta.setId(1L);
+
+        
+        lenient().when(assembler.toModel(any(Venta.class)))
+                 .thenAnswer(invocation -> EntityModel.of(new VentaResponseDTO()));
     }
 
     @Test
@@ -56,8 +61,6 @@ class VentaControllerTest {
 
         mockMvc.perform(get("/api/ventas"))
                 .andExpect(status().isOk());
-        lenient().when(assembler.toModel(any(Venta.class)))
-         .thenAnswer(invocation -> EntityModel.of(invocation.getArgument(0)));
     }
 
     @Test

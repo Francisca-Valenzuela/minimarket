@@ -18,12 +18,6 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-/**
- * Verifica que el registro de movimientos de inventario solo lo pueda
- * hacer un usuario con rol GERENTE (según @PreAuthorize("hasRole('GERENTE')")
- * en InventarioController.registrarMovimiento), y que EMPLEADO/CLIENTE
- * sean rechazados.
- */
 @SpringBootTest
 @AutoConfigureMockMvc
 class InventarioControllerSecurityTest {
@@ -39,14 +33,15 @@ class InventarioControllerSecurityTest {
     @Test
     @WithMockUser(roles = {"GERENTE"})
     void gerente_puedeRegistrarMovimiento() throws Exception {
-        Producto producto = new Producto();
-        producto.setId(1L);
-
         Inventario inventario = new Inventario();
         inventario.setId(1L);
-        inventario.setProducto(producto);
         inventario.setCantidad(50);
         inventario.setTipoMovimiento("Entrada");
+        
+        // CORRECCIÓN: Le agregamos un producto simulado para evitar el NullPointerException en HATEOAS
+        Producto producto = new Producto();
+        producto.setId(1L);
+        inventario.setProducto(producto);
 
         when(inventarioService.save(any(Inventario.class))).thenReturn(inventario);
 
@@ -61,8 +56,6 @@ class InventarioControllerSecurityTest {
     void empleado_NoPuedeRegistrarMovimiento_devuelve403() throws Exception {
         Inventario inventario = new Inventario();
         inventario.setId(1L);
-        inventario.setCantidad(50);
-        inventario.setTipoMovimiento("Entrada");
 
         mockMvc.perform(post("/api/inventario")
                         .contentType(MediaType.APPLICATION_JSON)
