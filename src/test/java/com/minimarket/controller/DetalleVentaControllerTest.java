@@ -2,6 +2,7 @@ package com.minimarket.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.minimarket.entity.DetalleVenta;
+import com.minimarket.entity.Producto;
 import com.minimarket.service.DetalleVentaService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -43,8 +44,12 @@ class DetalleVentaControllerTest {
         mockMvc = MockMvcBuilders.standaloneSetup(detalleVentaController).build();
         objectMapper = new ObjectMapper();
 
+        Producto producto = new Producto();
+        producto.setId(1L);
+
         detalle = new DetalleVenta();
         detalle.setId(1L);
+        detalle.setProducto(producto);
         detalle.setCantidad(3);
         detalle.setPrecio(1500.0);
     }

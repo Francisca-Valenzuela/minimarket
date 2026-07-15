@@ -3,6 +3,8 @@ package com.minimarket.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.minimarket.assembler.CarritoModelAssembler;
 import com.minimarket.entity.Carrito;
+import com.minimarket.entity.Producto;
+import com.minimarket.entity.Usuario;
 import com.minimarket.service.CarritoService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -41,8 +43,16 @@ class CarritoControllerTest {
         mockMvc = MockMvcBuilders.standaloneSetup(carritoController).build();
         objectMapper = new ObjectMapper();
 
+        Usuario usuario = new Usuario();
+        usuario.setId(1L);
+
+        Producto producto = new Producto();
+        producto.setId(1L);
+
         carrito = new Carrito();
         carrito.setId(1L);
+        carrito.setUsuario(usuario);
+        carrito.setProducto(producto);
         carrito.setCantidad(2);
 
         // El assembler real se prueba de forma unitaria aparte; aquí solo se

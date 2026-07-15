@@ -1,9 +1,10 @@
 package com.minimarket.service.impl;
 
+import lombok.RequiredArgsConstructor;
+
 import com.minimarket.entity.Producto;
 import com.minimarket.repository.ProductoRepository;
 import com.minimarket.service.ProductoService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -11,10 +12,10 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class ProductoServiceImpl implements ProductoService {
 
-    @Autowired
-    private ProductoRepository productoRepository;
+    private final ProductoRepository productoRepository;
 
     @Override
     public List<Producto> findAll() {

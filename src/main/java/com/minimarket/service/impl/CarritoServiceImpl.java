@@ -1,18 +1,19 @@
 package com.minimarket.service.impl;
 
+import lombok.RequiredArgsConstructor;
+
 import com.minimarket.entity.Carrito;
 import com.minimarket.repository.CarritoRepository;
 import com.minimarket.service.CarritoService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class CarritoServiceImpl implements CarritoService {
 
-    @Autowired
-    private CarritoRepository carritoRepository;
+    private final CarritoRepository carritoRepository;
 
     @Override
     public List<Carrito> findAll() {

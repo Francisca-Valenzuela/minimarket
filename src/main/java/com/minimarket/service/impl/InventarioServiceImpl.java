@@ -1,22 +1,23 @@
 package com.minimarket.service.impl;
 
+import lombok.RequiredArgsConstructor;
+
 import com.minimarket.entity.Inventario;
 import com.minimarket.repository.InventarioRepository;
 import com.minimarket.service.InventarioService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Set;
 
 @Service
+@RequiredArgsConstructor
 public class InventarioServiceImpl implements InventarioService {
 
     // Únicos tipos de movimiento aceptados por el sistema (Entrada o Salida de stock).
     private static final Set<String> TIPOS_MOVIMIENTO_VALIDOS = Set.of("Entrada", "Salida");
 
-    @Autowired
-    private InventarioRepository inventarioRepository;
+    private final InventarioRepository inventarioRepository;
 
     @Override
     public List<Inventario> findAll() {

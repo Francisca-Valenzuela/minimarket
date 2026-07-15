@@ -1,5 +1,7 @@
 package com.minimarket.controller;
 
+import lombok.RequiredArgsConstructor;
+
 import com.minimarket.assembler.ProductoModelAssembler;
 import com.minimarket.dto.ProductoDTO;
 import com.minimarket.entity.Categoria;
@@ -17,7 +19,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.http.MediaType;
@@ -35,16 +36,14 @@ import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 @RequestMapping(value = "/api/productos", produces = { "application/hal+json", MediaType.APPLICATION_JSON_VALUE })
 @Tag(name = "Productos", description = "Gestión del catálogo de productos del minimarket.")
 @SecurityRequirement(name = "bearerAuth")
+@RequiredArgsConstructor
 public class ProductoController {
 
-    @Autowired
-    private ProductoService productoService;
+    private final ProductoService productoService;
 
-    @Autowired
-    private CategoriaService categoriaService;
+    private final CategoriaService categoriaService;
 
-    @Autowired
-    private ProductoModelAssembler productoModelAssembler;
+    private final ProductoModelAssembler productoModelAssembler;
 
     @Operation(summary = "Listar todos los productos", description = "Retorna el catálogo completo de productos con sus respectivos enlaces HATEOAS.")
     @ApiResponses(value = {

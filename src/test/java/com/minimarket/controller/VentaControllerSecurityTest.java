@@ -1,9 +1,14 @@
 package com.minimarket.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.minimarket.entity.DetalleVenta;
+import com.minimarket.entity.Producto;
+import com.minimarket.entity.Usuario;
 import com.minimarket.entity.Venta;
 import com.minimarket.service.VentaService;
 import org.junit.jupiter.api.Test;
+
+import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -36,8 +41,26 @@ class VentaControllerSecurityTest {
     @Test
     @WithMockUser(roles = {"EMPLEADO"})
     void cajero_puedeGenerarVenta() throws Exception {
+        // CORRECCIÓN: Venta exige @NotNull en "usuario" y @NotEmpty/@Valid en
+        // "detalles" (con cada DetalleVenta exigiendo producto y cantidad). Un
+        // payload vacío fallaba la validación con 400 antes de llegar a
+        // evaluar el rol, por lo que el test nunca alcanzaba el 201 esperado.
+        Usuario usuario = new Usuario();
+        usuario.setId(1L);
+
+        Producto producto = new Producto();
+        producto.setId(1L);
+
+        DetalleVenta detalle = new DetalleVenta();
+        detalle.setProducto(producto);
+        detalle.setCantidad(2);
+        detalle.setPrecio(1000.0);
+
         Venta venta = new Venta();
         venta.setId(1L);
+        venta.setUsuario(usuario);
+        venta.setDetalles(List.of(detalle));
+
         when(ventaService.save(any(Venta.class))).thenReturn(venta);
 
         mockMvc.perform(post("/api/ventas")

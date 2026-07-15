@@ -2,6 +2,9 @@ package com.minimarket.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.minimarket.dto.VentaResponseDTO; 
+import com.minimarket.entity.DetalleVenta;
+import com.minimarket.entity.Producto;
+import com.minimarket.entity.Usuario;
 import com.minimarket.entity.Venta;
 import com.minimarket.service.VentaService;
 import org.junit.jupiter.api.BeforeEach;
@@ -47,8 +50,20 @@ class VentaControllerTest {
         mockMvc = MockMvcBuilders.standaloneSetup(ventaController).build();
         objectMapper = new ObjectMapper();
         
+        Usuario usuario = new Usuario();
+        usuario.setId(1L);
+
+        Producto producto = new Producto();
+        producto.setId(1L);
+
+        DetalleVenta detalle = new DetalleVenta();
+        detalle.setProducto(producto);
+        detalle.setCantidad(2);
+
         venta = new Venta();
         venta.setId(1L);
+        venta.setUsuario(usuario);
+        venta.setDetalles(List.of(detalle));
 
         
         lenient().when(assembler.toModel(any(Venta.class)))

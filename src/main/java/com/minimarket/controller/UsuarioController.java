@@ -1,5 +1,7 @@
 package com.minimarket.controller;
 
+import lombok.RequiredArgsConstructor;
+
 import com.minimarket.assembler.UsuarioModelAssembler;
 import com.minimarket.dto.UsuarioRequestDTO;
 import com.minimarket.dto.UsuarioResponseDTO;
@@ -20,7 +22,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 
 import jakarta.validation.Valid;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.http.MediaType;
@@ -41,19 +42,16 @@ import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 @RequestMapping(value = "/api/usuarios", produces = { "application/hal+json", MediaType.APPLICATION_JSON_VALUE })
 @Tag(name = "Usuarios", description = "Gestión de cuentas y perfiles de usuario del sistema.")
 @SecurityRequirement(name = "bearerAuth")
+@RequiredArgsConstructor
 public class UsuarioController {
 
-    @Autowired
-    private UsuarioService usuarioService;
+    private final UsuarioService usuarioService;
 
-    @Autowired
-    private UsuarioModelAssembler assembler;
+    private final UsuarioModelAssembler assembler;
 
-    @Autowired
-    private RolRepository rolRepository;
+    private final RolRepository rolRepository;
 
-    @Autowired
-    private PasswordEncoder passwordEncoder;
+    private final PasswordEncoder passwordEncoder;
 
     @Operation(summary = "Listar todos los usuarios", description = "Devuelve una lista con todos los usuarios registrados y sus enlaces HATEOAS.")
     @ApiResponses(value = {

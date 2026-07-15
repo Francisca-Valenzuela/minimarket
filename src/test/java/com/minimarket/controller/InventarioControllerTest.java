@@ -90,13 +90,18 @@ class InventarioControllerTest {
     }
 
     @Test
-    void testRegistrarMovimiento_ProductoNull() throws Exception {
+    void testRegistrarMovimiento_ProductoNull_devuelve400() throws Exception {
+        // CORRECCIÓN: la entidad Inventario exige @NotNull en "producto", por lo
+        // que un movimiento sin producto asociado debe ser rechazado por Bean
+        // Validation con 400, no aceptado con 201 como esperaba el test original.
+        // No se stubea inventarioService.save() porque, al fallar la validación
+        // antes de llegar al controller, el servicio nunca se invoca (stubear
+        // igual generaría UnnecessaryStubbingException en modo estricto).
         inventario.setProducto(null);
-        when(inventarioService.save(any(Inventario.class))).thenReturn(inventario);
         mockMvc.perform(post("/api/inventario")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(inventario)))
-                .andExpect(status().isCreated());
+                .andExpect(status().isBadRequest());
     }
 
     @Test

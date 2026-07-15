@@ -4,6 +4,8 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
 
 @Entity
 @Schema(description = "Línea de detalle de una venta: producto vendido, cantidad y precio unitario")
@@ -19,11 +21,14 @@ public class DetalleVenta {
     @Schema(description = "Venta a la que pertenece este detalle (no se expone para evitar ciclos de serialización)", hidden = true)
     private Venta venta;
 
+    @NotNull(message = "El detalle debe estar asociado a un producto")
     @ManyToOne
     @JoinColumn(name = "producto_id", nullable = false)
     @Schema(description = "Producto vendido en esta línea de detalle")
     private Producto producto;
 
+    @NotNull(message = "La cantidad es obligatoria")
+    @Min(value = 1, message = "La cantidad debe ser mayor a cero")
     @Column(nullable = false)
     @Schema(description = "Cantidad de unidades vendidas del producto", example = "2")
     private Integer cantidad;

@@ -1,5 +1,7 @@
 package com.minimarket.controller;
 
+import lombok.RequiredArgsConstructor;
+
 import com.minimarket.assembler.InventarioModelAssembler;
 import com.minimarket.entity.Inventario;
 import com.minimarket.service.InventarioService;
@@ -13,8 +15,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.http.MediaType;
@@ -32,13 +34,12 @@ import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 @RequestMapping(value = "/api/inventario", produces = { "application/hal+json", MediaType.APPLICATION_JSON_VALUE })
 @Tag(name = "Inventario", description = "Gestión de los niveles de stock e inventario de productos.")
 @SecurityRequirement(name = "bearerAuth")
+@RequiredArgsConstructor
 public class InventarioController {
 
-    @Autowired
-    private InventarioService inventarioService;
+    private final InventarioService inventarioService;
 
-    @Autowired
-    private InventarioModelAssembler assembler;
+    private final InventarioModelAssembler assembler;
 
     @Operation(summary = "Listar inventario")
     @ApiResponses(value = {
@@ -87,7 +88,7 @@ public class InventarioController {
     @PreAuthorize("hasRole('GERENTE')") 
     public ResponseEntity<EntityModel<Inventario>> guardarInventario(
             @Parameter(description = "Datos del inventario", required = true)
-            @RequestBody Inventario inventario) {
+            @Valid @RequestBody Inventario inventario) {
         Inventario guardado = inventarioService.save(inventario);
         return ResponseEntity
                 .created(linkTo(methodOn(InventarioController.class).obtenerInventarioPorId(guardado.getId())).toUri())
@@ -108,7 +109,7 @@ public class InventarioController {
             @Parameter(description = "ID del inventario a modificar", example = "1", required = true)
             @PathVariable Long id, 
             @Parameter(description = "Nuevos datos", required = true)
-            @RequestBody Inventario inventario) {
+            @Valid @RequestBody Inventario inventario) {
         if (inventarioService.findById(id) != null) {
             inventario.setId(id);
             return ResponseEntity.ok(assembler.toModel(inventarioService.save(inventario)));

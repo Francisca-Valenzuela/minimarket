@@ -1,5 +1,7 @@
 package com.minimarket.security.controller;
 
+import lombok.RequiredArgsConstructor;
+
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -28,27 +30,22 @@ import com.minimarket.security.util.JwtUtil;
 
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 
 @Slf4j
 @RestController
 @RequestMapping("/api/auth")
+@RequiredArgsConstructor
 public class AuthController {
 
-    @Autowired
-    private AuthenticationManager authenticationManager;
+    private final AuthenticationManager authenticationManager;
 
-    @Autowired
-    private JwtUtil jwtUtil;
+    private final JwtUtil jwtUtil;
 
-    @Autowired
-    private UsuarioRepository usuarioRepository;
+    private final UsuarioRepository usuarioRepository;
 
-    @Autowired
-    private RolRepository rolRepository;
+    private final RolRepository rolRepository;
 
-    @Autowired
-    private PasswordEncoder passwordEncoder;
+    private final PasswordEncoder passwordEncoder;
 
     // ... (el resto de tus métodos @PostMapping("/login") y @PostMapping("/registro") quedan igual)
 

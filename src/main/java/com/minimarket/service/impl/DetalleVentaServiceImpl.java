@@ -1,18 +1,19 @@
 package com.minimarket.service.impl;
 
+import lombok.RequiredArgsConstructor;
+
 import com.minimarket.entity.DetalleVenta;
 import com.minimarket.repository.DetalleVentaRepository;
 import com.minimarket.service.DetalleVentaService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class DetalleVentaServiceImpl implements DetalleVentaService {
 
-    @Autowired
-    private DetalleVentaRepository detalleVentaRepository;
+    private final DetalleVentaRepository detalleVentaRepository;
 
     @Override
     public List<DetalleVenta> findAll() {

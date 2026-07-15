@@ -1,19 +1,20 @@
 package com.minimarket.service.impl;
 
+import lombok.RequiredArgsConstructor;
+
 import com.minimarket.entity.Usuario;
 import com.minimarket.repository.UsuarioRepository;
 import com.minimarket.service.UsuarioService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
 
 @Service
+@RequiredArgsConstructor
 public class UsuarioServiceImpl implements UsuarioService {
 
-    @Autowired
-    private UsuarioRepository usuarioRepository;
+    private final UsuarioRepository usuarioRepository;
 
     @Override
     public List<Usuario> findAll() {

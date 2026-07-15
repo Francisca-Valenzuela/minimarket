@@ -1,5 +1,7 @@
 package com.minimarket.controller;
 
+import lombok.RequiredArgsConstructor;
+
 import com.minimarket.assembler.DetalleVentaModelAssembler;
 import com.minimarket.entity.DetalleVenta;
 import com.minimarket.service.DetalleVentaService;
@@ -13,8 +15,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.http.MediaType;
@@ -32,13 +34,12 @@ import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 @RequestMapping(value = "/api/detalle-ventas", produces = { "application/hal+json", MediaType.APPLICATION_JSON_VALUE })
 @Tag(name = "Detalle de Ventas", description = "Gestión de los ítems o detalles específicos de cada venta.")
 @SecurityRequirement(name = "bearerAuth")
+@RequiredArgsConstructor
 public class DetalleVentaController {
 
-    @Autowired
-    private DetalleVentaService detalleVentaService;
+    private final DetalleVentaService detalleVentaService;
 
-    @Autowired
-    private DetalleVentaModelAssembler assembler;
+    private final DetalleVentaModelAssembler assembler;
 
     @Operation(summary = "Listar detalles de ventas", description = "Retorna todos los detalles históricos registrados en el sistema.")
     @ApiResponses(value = {
@@ -87,7 +88,7 @@ public class DetalleVentaController {
     @PreAuthorize("hasAnyRole('EMPLEADO', 'GERENTE')")
     public ResponseEntity<EntityModel<DetalleVenta>> guardarDetalleVenta(
             @Parameter(description = "Objeto con los datos del detalle", required = true)
-            @RequestBody DetalleVenta detalleVenta) {
+            @Valid @RequestBody DetalleVenta detalleVenta) {
         DetalleVenta guardado = detalleVentaService.save(detalleVenta);
         return ResponseEntity
                 .created(linkTo(methodOn(DetalleVentaController.class).obtenerDetalleVentaPorId(guardado.getId())).toUri())
@@ -108,7 +109,7 @@ public class DetalleVentaController {
             @Parameter(description = "ID del detalle a modificar", example = "1", required = true)
             @PathVariable Long id, 
             @Parameter(description = "Nuevos datos del detalle", required = true)
-            @RequestBody DetalleVenta detalleVenta) {
+            @Valid @RequestBody DetalleVenta detalleVenta) {
         if (detalleVentaService.findById(id) != null) {
             detalleVenta.setId(id);
             return ResponseEntity.ok(assembler.toModel(detalleVentaService.save(detalleVenta)));

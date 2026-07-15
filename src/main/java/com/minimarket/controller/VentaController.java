@@ -1,5 +1,7 @@
 package com.minimarket.controller;
 
+import lombok.RequiredArgsConstructor;
+
 import com.minimarket.assembler.VentaModelAssembler;
 import com.minimarket.dto.VentaResponseDTO;
 import com.minimarket.entity.Venta;
@@ -14,8 +16,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.http.MediaType;
@@ -33,13 +35,12 @@ import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 @RequestMapping(value = "/api/ventas", produces = { "application/hal+json", MediaType.APPLICATION_JSON_VALUE })
 @Tag(name = "Ventas", description = "Gestión del registro e historial de ventas del minimarket.")
 @SecurityRequirement(name = "bearerAuth")
+@RequiredArgsConstructor
 public class VentaController {
 
-    @Autowired
-    private VentaService ventaService;
+    private final VentaService ventaService;
 
-    @Autowired
-    private VentaModelAssembler assembler;
+    private final VentaModelAssembler assembler;
 
     @Operation(summary = "Listar todas las ventas", description = "Retorna el historial de ventas utilizando un DTO limpio y enlaces HATEOAS.")
     @ApiResponses(value = {
@@ -88,7 +89,7 @@ public class VentaController {
     @PreAuthorize("hasAnyRole('GERENTE', 'EMPLEADO')") 
     public ResponseEntity<EntityModel<VentaResponseDTO>> guardarVenta(
             @Parameter(description = "Payload con los datos de la venta", required = true)
-            @RequestBody Venta venta) {
+            @Valid @RequestBody Venta venta) {
         Venta guardada = ventaService.save(venta);
         return ResponseEntity
                 .created(linkTo(methodOn(VentaController.class).obtenerVentaPorId(guardada.getId())).toUri())

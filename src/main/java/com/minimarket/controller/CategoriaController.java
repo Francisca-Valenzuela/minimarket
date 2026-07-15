@@ -1,5 +1,7 @@
 package com.minimarket.controller;
 
+import lombok.RequiredArgsConstructor;
+
 import com.minimarket.assembler.CategoriaModelAssembler;
 import com.minimarket.entity.Categoria;
 import com.minimarket.service.CategoriaService;
@@ -14,7 +16,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.http.MediaType;
@@ -32,13 +33,12 @@ import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 @RequestMapping(value = "/api/categorias", produces = { "application/hal+json", MediaType.APPLICATION_JSON_VALUE })
 @Tag(name = "Categorías", description = "Gestión de las categorías de productos del minimarket.")
 @SecurityRequirement(name = "bearerAuth")
+@RequiredArgsConstructor
 public class CategoriaController {
 
-    @Autowired
-    private CategoriaService categoriaService;
+    private final CategoriaService categoriaService;
 
-    @Autowired
-    private CategoriaModelAssembler assembler;
+    private final CategoriaModelAssembler assembler;
 
     @Operation(summary = "Listar todas las categorías", description = "Retorna el listado completo de categorías con enlaces HATEOAS.")
     @ApiResponses(value = {

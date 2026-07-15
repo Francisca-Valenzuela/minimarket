@@ -1,12 +1,13 @@
 package com.minimarket.service.impl;
 
+import lombok.RequiredArgsConstructor;
+
 import com.minimarket.entity.DetalleVenta;
 import com.minimarket.entity.Producto;
 import com.minimarket.entity.Venta;
 import com.minimarket.repository.ProductoRepository;
 import com.minimarket.repository.VentaRepository;
 import com.minimarket.service.VentaService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,13 +17,12 @@ import java.math.RoundingMode;
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class VentaServiceImpl implements VentaService {
 
-    @Autowired
-    private VentaRepository ventaRepository;
+    private final VentaRepository ventaRepository;
 
-    @Autowired
-    private ProductoRepository productoRepository;
+    private final ProductoRepository productoRepository;
 
     // Métodos obligatorios requeridos por la interfaz VentaService
     @Override

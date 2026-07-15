@@ -20,7 +20,10 @@ public class Categoria {
     @Schema(description = "Nombre descriptivo de la categoría", example = "Abarrotes")
     private String nombre;
 
-    @OneToMany(mappedBy = "categoria", cascade = CascadeType.ALL)
+    // Sin cascade: eliminar una categoría NO debe eliminar sus productos de forma
+    // silenciosa. CategoriaServiceImpl.deleteById() valida explícitamente que la
+    // categoría no tenga productos asociados antes de permitir el borrado.
+    @OneToMany(mappedBy = "categoria")
     @JsonIgnore
     @Schema(description = "Lista de productos que pertenecen a esta categoría", hidden = true)
     private List<Producto> productos;

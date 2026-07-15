@@ -2,6 +2,9 @@ package com.minimarket.entity;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.*;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
 import java.util.Date;
 import java.util.List;
 
@@ -13,6 +16,7 @@ public class Venta {
     @Schema(description = "Identificador único de la venta", example = "1", accessMode = Schema.AccessMode.READ_ONLY)
     private Long id;
 
+    @NotNull(message = "La venta debe estar asociada a un usuario")
     @ManyToOne
     @JoinColumn(name = "usuario_id", nullable = false)
     @Schema(description = "Usuario (cliente) al que pertenece la venta")
@@ -22,6 +26,8 @@ public class Venta {
     @Schema(description = "Fecha en que se registró la venta", example = "2026-07-08T14:30:00.000Z")
     private Date fecha;
 
+    @NotEmpty(message = "La venta debe contener al menos un detalle")
+    @Valid
     @OneToMany(mappedBy = "venta", cascade = CascadeType.ALL)
     @Schema(description = "Listado de productos y cantidades incluidos en la venta")
     private List<DetalleVenta> detalles;

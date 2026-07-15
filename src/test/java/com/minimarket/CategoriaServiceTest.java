@@ -1,7 +1,9 @@
 package com.minimarket;
 
 import com.minimarket.entity.Categoria;
+import com.minimarket.entity.Producto;
 import com.minimarket.repository.CategoriaRepository;
+import com.minimarket.repository.ProductoRepository;
 import com.minimarket.service.impl.CategoriaServiceImpl;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -20,6 +22,9 @@ class CategoriaServiceTest {
 
     @Mock 
     private CategoriaRepository categoriaRepository;
+
+    @Mock
+    private ProductoRepository productoRepository;
     
     @InjectMocks 
     private CategoriaServiceImpl categoriaService;
@@ -47,8 +52,22 @@ class CategoriaServiceTest {
 
     @Test 
     void testDeleteById() {
+        when(productoRepository.findByCategoriaId(1L)).thenReturn(List.of());
         doNothing().when(categoriaRepository).deleteById(1L);
         categoriaService.deleteById(1L);
         verify(categoriaRepository, times(1)).deleteById(1L);
+    }
+
+    @Test
+    void testDeleteById_ConProductosAsociados_LanzaExcepcion() {
+        Producto producto = new Producto();
+        producto.setId(1L);
+        when(productoRepository.findByCategoriaId(1L)).thenReturn(List.of(producto));
+
+        RuntimeException ex = assertThrows(RuntimeException.class,
+                () -> categoriaService.deleteById(1L));
+
+        assertTrue(ex.getMessage().contains("productos asociados"));
+        verify(categoriaRepository, never()).deleteById(anyLong());
     }
 }

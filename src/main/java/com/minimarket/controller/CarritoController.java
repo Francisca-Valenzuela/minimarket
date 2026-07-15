@@ -1,5 +1,7 @@
 package com.minimarket.controller;
 
+import lombok.RequiredArgsConstructor;
+
 import com.minimarket.assembler.CarritoModelAssembler;
 import com.minimarket.entity.Carrito;
 import com.minimarket.service.CarritoService;
@@ -13,7 +15,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.springframework.beans.factory.annotation.Autowired;
+import jakarta.validation.Valid;
 import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.http.MediaType;
@@ -31,13 +33,12 @@ import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 @RequestMapping(value = "/api/carrito", produces = { "application/hal+json", MediaType.APPLICATION_JSON_VALUE })
 @Tag(name = "Carrito", description = "Gestión del carrito de compras de los clientes")
 @SecurityRequirement(name = "bearerAuth")
+@RequiredArgsConstructor
 public class CarritoController {
 
-    @Autowired
-    private CarritoService carritoService;
+    private final CarritoService carritoService;
 
-    @Autowired
-    private CarritoModelAssembler carritoModelAssembler;
+    private final CarritoModelAssembler carritoModelAssembler;
 
     @Operation(
         summary = "Listar todos los carritos",
@@ -105,7 +106,7 @@ public class CarritoController {
     @PreAuthorize("hasAnyRole('CLIENTE', 'EMPLEADO', 'GERENTE')")
     public ResponseEntity<EntityModel<Carrito>> agregarProductoAlCarrito(
             @Parameter(description = "Objeto con los datos del carrito a crear", required = true)
-            @RequestBody Carrito carrito) {
+            @Valid @RequestBody Carrito carrito) {
         Carrito guardado = carritoService.save(carrito);
         EntityModel<Carrito> model = carritoModelAssembler.toModel(guardado);
         return ResponseEntity
@@ -131,7 +132,7 @@ public class CarritoController {
             @Parameter(description = "Identificador único del registro a actualizar", example = "1", required = true)
             @PathVariable Long id,
             @Parameter(description = "Nuevos datos de actualización", required = true)
-            @RequestBody Carrito carrito) {
+            @Valid @RequestBody Carrito carrito) {
         Carrito existente = carritoService.findById(id);
         if (existente != null) {
             carrito.setId(id);
