@@ -6,10 +6,11 @@ import com.minimarket.entity.Carrito;
 import com.minimarket.entity.Producto;
 import com.minimarket.entity.Usuario;
 import com.minimarket.service.CarritoService;
+import com.minimarket.service.ProductoService;
+import com.minimarket.service.UsuarioService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.hateoas.EntityModel;
@@ -32,21 +33,30 @@ class CarritoControllerTest {
 
     @Mock private CarritoService carritoService;
     @Mock private CarritoModelAssembler carritoModelAssembler;
+    @Mock private ProductoService productoService;
+    @Mock private UsuarioService usuarioService;
 
-    @InjectMocks
     private CarritoController carritoController;
 
     private Carrito carrito;
+    private Usuario usuario;
+    private Producto producto;
 
     @BeforeEach
     void setUp() {
+        // Se instancia manualmente (en vez de @InjectMocks) para garantizar que
+        // los 4 mocks queden cableados de forma determinista: con @InjectMocks
+        // se observó que usuarioService podía quedar null y provocar un NPE
+        // en agregarProductoAlCarrito/actualizarCarrito.
+        carritoController = new CarritoController(
+                carritoService, carritoModelAssembler, productoService, usuarioService);
         mockMvc = MockMvcBuilders.standaloneSetup(carritoController).build();
         objectMapper = new ObjectMapper();
 
-        Usuario usuario = new Usuario();
+        usuario = new Usuario();
         usuario.setId(1L);
 
-        Producto producto = new Producto();
+        producto = new Producto();
         producto.setId(1L);
 
         carrito = new Carrito();
@@ -59,6 +69,11 @@ class CarritoControllerTest {
         // simula la conversión a EntityModel para evitar NullPointerException.
         lenient().when(carritoModelAssembler.toModel(any(Carrito.class)))
                 .thenAnswer(invocation -> EntityModel.of(invocation.getArgument(0)));
+
+        // Usados por agregarProductoAlCarrito/actualizarCarrito para resolver
+        // el usuario y producto reales a partir de los IDs del payload.
+        lenient().when(usuarioService.findById(1L)).thenReturn(java.util.Optional.of(usuario));
+        lenient().when(productoService.findById(1L)).thenReturn(producto);
     }
 
     @Test

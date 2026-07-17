@@ -7,6 +7,9 @@ import com.minimarket.entity.Usuario;
 import com.minimarket.entity.Venta;
 import com.minimarket.service.VentaService;
 import org.junit.jupiter.api.Test;
+import com.minimarket.entity.Sucursal;
+import com.minimarket.entity.TipoEntrega;
+
 
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,10 +44,6 @@ class VentaControllerSecurityTest {
     @Test
     @WithMockUser(roles = {"EMPLEADO"})
     void cajero_puedeGenerarVenta() throws Exception {
-        // CORRECCIÓN: Venta exige @NotNull en "usuario" y @NotEmpty/@Valid en
-        // "detalles" (con cada DetalleVenta exigiendo producto y cantidad). Un
-        // payload vacío fallaba la validación con 400 antes de llegar a
-        // evaluar el rol, por lo que el test nunca alcanzaba el 201 esperado.
         Usuario usuario = new Usuario();
         usuario.setId(1L);
 
@@ -56,9 +55,16 @@ class VentaControllerSecurityTest {
         detalle.setCantidad(2);
         detalle.setPrecio(1000.0);
 
+        // ↓↓↓ AGREGAR
+        Sucursal sucursal = new Sucursal();
+        sucursal.setId(1L);
+        // ↑↑↑ AGREGAR
+
         Venta venta = new Venta();
         venta.setId(1L);
         venta.setUsuario(usuario);
+        venta.setSucursal(sucursal);                      // ← AGREGAR
+        venta.setTipoEntrega(TipoEntrega.RETIRO_TIENDA);   // ← AGREGAR
         venta.setDetalles(List.of(detalle));
 
         when(ventaService.save(any(Venta.class))).thenReturn(venta);
@@ -68,6 +74,7 @@ class VentaControllerSecurityTest {
                         .content(objectMapper.writeValueAsString(venta)))
                 .andExpect(status().isCreated());
     }
+
 
     @Test
     @WithMockUser(roles = {"CLIENTE"})

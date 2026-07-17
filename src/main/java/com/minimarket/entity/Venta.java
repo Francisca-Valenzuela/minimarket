@@ -22,6 +22,13 @@ public class Venta {
     @Schema(description = "Usuario (cliente) al que pertenece la venta")
     private Usuario usuario;
 
+    // --- NUEVO CAMPO: requerido para descontar stock desde la sucursal correcta ---
+    @NotNull(message = "La venta debe estar asociada a una sucursal")
+    @ManyToOne
+    @JoinColumn(name = "sucursal_id", nullable = false)
+    @Schema(description = "Sucursal en la que se realizó la venta (define de dónde se descuenta el stock)")
+    private Sucursal sucursal;
+
     @Column(nullable = false)
     @Schema(description = "Fecha en que se registró la venta", example = "2026-07-08T14:30:00.000Z")
     private Date fecha;
@@ -39,6 +46,17 @@ public class Venta {
     @Schema(description = "Monto total de la venta, calculado a partir de la suma de los detalles", example = "15990.0", accessMode = Schema.AccessMode.READ_ONLY)
     private Double total;
 
+    @NotNull(message = "Debe indicar el tipo de entrega (RETIRO_TIENDA o DESPACHO_DOMICILIO)")
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    @Schema(description = "Modalidad de entrega de la venta", example = "DESPACHO_DOMICILIO")
+    private TipoEntrega tipoEntrega;
+
+    @Column(nullable = true)
+    @Schema(description = "Dirección de despacho (obligatoria solo si tipoEntrega es DESPACHO_DOMICILIO)",
+            example = "Av. Siempre Viva 742, Santiago")
+    private String direccionDespacho;
+
     // Getters y Setters
     public Long getId() {
         return id;
@@ -54,6 +72,15 @@ public class Venta {
 
     public void setUsuario(Usuario usuario) {
         this.usuario = usuario;
+    }
+
+    // --- NUEVO getter/setter ---
+    public Sucursal getSucursal() {
+        return sucursal;
+    }
+
+    public void setSucursal(Sucursal sucursal) {
+        this.sucursal = sucursal;
     }
 
     public Date getFecha() {
@@ -78,5 +105,21 @@ public class Venta {
 
     public void setTotal(Double total) {
         this.total = total;
+    }
+
+    public TipoEntrega getTipoEntrega() {
+        return tipoEntrega;
+    }
+
+    public void setTipoEntrega(TipoEntrega tipoEntrega) {
+        this.tipoEntrega = tipoEntrega;
+    }
+
+    public String getDireccionDespacho() {
+        return direccionDespacho;
+    }
+
+    public void setDireccionDespacho(String direccionDespacho) {
+        this.direccionDespacho = direccionDespacho;
     }
 }

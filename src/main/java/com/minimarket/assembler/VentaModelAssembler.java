@@ -15,21 +15,27 @@ import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 
 @Component
-// 1. Notarás que ahora devuelve un EntityModel de VentaResponseDTO, no de Venta
 public class VentaModelAssembler implements RepresentationModelAssembler<Venta, EntityModel<VentaResponseDTO>> {
 
     @Override
     public EntityModel<VentaResponseDTO> toModel(Venta venta) {
-        
-        // 2. Mapeamos la Entidad al DTO
+
+        // Mapeamos la Entidad al DTO
         VentaResponseDTO dto = new VentaResponseDTO();
         dto.setId(venta.getId());
         dto.setFecha(venta.getFecha());
         dto.setTotal(venta.getTotal());
+        dto.setTipoEntrega(venta.getTipoEntrega());
+        dto.setDireccionDespacho(venta.getDireccionDespacho());
 
         // Extraemos solo el nombre del comprador (Protegiendo sus otros datos)
         if (venta.getUsuario() != null) {
             dto.setComprador(venta.getUsuario().getNombre() + " " + venta.getUsuario().getApellido());
+        }
+
+        // --- NUEVO: extraemos solo el nombre de la sucursal (sin exponer toda la entidad) ---
+        if (venta.getSucursal() != null) {
+            dto.setSucursal(venta.getSucursal().getNombre());
         }
 
         // Mapeamos los detalles a DTOs planos
@@ -44,7 +50,7 @@ public class VentaModelAssembler implements RepresentationModelAssembler<Venta, 
             }).collect(Collectors.toList()));
         }
 
-        // 3. Agregamos HATEOAS al DTO
+        // Agregamos HATEOAS al DTO
         EntityModel<VentaResponseDTO> model = EntityModel.of(dto,
                 linkTo(methodOn(VentaController.class).obtenerVentaPorId(venta.getId())).withSelfRel(),
                 linkTo(methodOn(VentaController.class).listarVentas()).withRel("ventas"));

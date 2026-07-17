@@ -46,6 +46,25 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(respuesta, HttpStatus.FORBIDDEN);
     }
 
+    // Recurso no encontrado (404). Debe declararse ANTES que
+    // handleRuntimeException, ya que Spring resuelve por el handler más
+    // específico, pero si ambos existieran en el orden inverso sin esa
+    // especificidad el genérico podría capturarla igual: la dejamos explícita
+    // para que quede documentado y no vuelva a caer en el 400 genérico.
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleResourceNotFound(ResourceNotFoundException ex) {
+        Map<String, Object> respuesta = buildError(ex.getMessage(), 404);
+        return new ResponseEntity<>(respuesta, HttpStatus.NOT_FOUND);
+    }
+
+    // Conflicto de stock (409): la solicitud es válida pero el estado actual
+    // del recurso (stock disponible) no la permite.
+    @ExceptionHandler(InsufficientStockException.class)
+    public ResponseEntity<Map<String, Object>> handleInsufficientStock(InsufficientStockException ex) {
+        Map<String, Object> respuesta = buildError(ex.getMessage(), 409);
+        return new ResponseEntity<>(respuesta, HttpStatus.CONFLICT);
+    }
+
     // Errores de negocio controlados (RuntimeException)
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<Map<String, Object>> handleRuntimeException(RuntimeException ex) {

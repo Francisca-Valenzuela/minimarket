@@ -10,7 +10,7 @@ Incluye autenticación JWT, autorización basada en roles, documentación intera
 Sistema de gestión para minimarket que cubre inventario, productos, ventas, carritos y usuarios.  
 La seguridad está implementada con **Spring Security + JWT (JJWT 0.12.3)**, arquitectura **stateless** y control de acceso por roles mediante `@PreAuthorize`.  
 Todos los endpoints están documentados con **springdoc-openapi** (esquemas, ejemplos, códigos de error) y las respuestas incluyen enlaces **HATEOAS** (`_links`) para que un cliente pueda navegar entre recursos relacionados sin conocer de antemano la estructura de URLs.  
-La calidad del código se valida con **160 pruebas unitarias e integración** distribuidas en 24 clases de test, con cobertura >90% medida con JaCoCo.
+La calidad del código se valida con **166 pruebas unitarias e integración** distribuidas en 24 clases de test, con cobertura medida con JaCoCo (ver tabla de cobertura más abajo).
 
 ---
 
@@ -228,7 +228,9 @@ Incluir en todas las requests protegidas:
 
 ## 🧪 Pruebas unitarias
 
-El proyecto incluye 160 pruebas distribuidas en 24 clases de test:
+El proyecto incluye 166 pruebas distribuidas en 24 clases de test, todas en verde (`mvn test` → `Tests run: 166, Failures: 0, Errors: 0`).
+
+> **Nota de mejora aplicada:** durante la revisión final se detectó que 4 pruebas (`InventarioControllerSecurityTest`, `InventarioControllerTest`, `VentaControllerSecurityTest`) fallaban porque enviaban payloads incompletos frente a validaciones `@NotNull`/`@NotEmpty` agregadas posteriormente en las entidades `Inventario` y `Venta`. Se corrigieron los payloads de prueba (y se ajustó una expectativa que ya no correspondía) para que la suite completa pase sin fallos.
 
 ### Pruebas de servicio (Mockito + JUnit 5)
 
@@ -274,7 +276,7 @@ El proyecto incluye 160 pruebas distribuidas en 24 clases de test:
 | `service.impl` | Alta (capa crítica de negocio) |
 | `controller` | Alta (incluyendo pruebas de seguridad) |
 | `security.util / filter` | Media (algunas ramas de error no forzadas) |
-| **Global** | **>90% instrucciones** |
+| **Global** | **_(completar con el % exacto de `target/site/jacoco/index.html` tras ejecutar `mvn clean test jacoco:report`)_** |
 
 ---
 
@@ -334,4 +336,4 @@ src/
 
 **PBY2202 – Desarrollo Backend II**  
 Duoc UC — Analista Programador Computacional  
-Semana 8 — Integrando seguridad en aplicaciones Backend: OpenAPI (springdoc-openapi + Swagger UI) y HATEOAS
+Semana 9 — Evaluación Final Transversal (EFT): microservicios, seguridad, pruebas unitarias, OpenAPI (springdoc-openapi + Swagger UI) y HATEOAS

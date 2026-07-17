@@ -4,7 +4,11 @@ import lombok.RequiredArgsConstructor;
 
 import com.minimarket.assembler.CarritoModelAssembler;
 import com.minimarket.entity.Carrito;
+import com.minimarket.entity.Producto;
+import com.minimarket.entity.Usuario;
 import com.minimarket.service.CarritoService;
+import com.minimarket.service.ProductoService;
+import com.minimarket.service.UsuarioService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
@@ -39,6 +43,10 @@ public class CarritoController {
     private final CarritoService carritoService;
 
     private final CarritoModelAssembler carritoModelAssembler;
+
+    private final ProductoService productoService;
+
+    private final UsuarioService usuarioService;
 
     @Operation(
         summary = "Listar todos los carritos",
@@ -98,15 +106,26 @@ public class CarritoController {
                     name = "Ejemplo de payload para nuevo carrito",
                     value = "{\"usuario\": {\"id\": 1}, \"producto\": {\"id\": 3}, \"cantidad\": 2}"
                 ))),
-        @ApiResponse(responseCode = "400", description = "Datos inválidos", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE)),
+        @ApiResponse(responseCode = "400", description = "Datos inválidos, usuario o producto inexistente", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE)),
         @ApiResponse(responseCode = "401", description = "No autenticado", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE)),
         @ApiResponse(responseCode = "403", description = "Sin permisos suficientes", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE))
     })
     @PostMapping
     @PreAuthorize("hasAnyRole('CLIENTE', 'EMPLEADO', 'GERENTE')")
-    public ResponseEntity<EntityModel<Carrito>> agregarProductoAlCarrito(
+    public ResponseEntity<?> agregarProductoAlCarrito(
             @Parameter(description = "Objeto con los datos del carrito a crear", required = true)
             @Valid @RequestBody Carrito carrito) {
+
+        Usuario usuario = usuarioService.findById(carrito.getUsuario().getId()).orElse(null);
+        Producto producto = productoService.findById(carrito.getProducto().getId());
+
+        if (usuario == null || producto == null) {
+            return ResponseEntity.badRequest().body("Usuario o producto inexistente");
+        }
+
+        carrito.setUsuario(usuario);
+        carrito.setProducto(producto);
+
         Carrito guardado = carritoService.save(carrito);
         EntityModel<Carrito> model = carritoModelAssembler.toModel(guardado);
         return ResponseEntity
@@ -123,23 +142,35 @@ public class CarritoController {
             content = @Content(mediaType = "application/hal+json",
                 schema = @Schema(implementation = Carrito.class))),
         @ApiResponse(responseCode = "404", description = "Carrito no encontrado", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE)),
+        @ApiResponse(responseCode = "400", description = "Datos inválidos, usuario o producto inexistente", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE)),
         @ApiResponse(responseCode = "401", description = "No autenticado", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE)),
         @ApiResponse(responseCode = "403", description = "Sin permisos suficientes", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE))
     })
     @PutMapping("/{id}")
     @PreAuthorize("hasAnyRole('CLIENTE', 'EMPLEADO', 'GERENTE')")
-    public ResponseEntity<EntityModel<Carrito>> actualizarCarrito(
+    public ResponseEntity<?> actualizarCarrito(
             @Parameter(description = "Identificador único del registro a actualizar", example = "1", required = true)
             @PathVariable Long id,
             @Parameter(description = "Nuevos datos de actualización", required = true)
             @Valid @RequestBody Carrito carrito) {
         Carrito existente = carritoService.findById(id);
-        if (existente != null) {
-            carrito.setId(id);
-            Carrito actualizado = carritoService.save(carrito);
-            return ResponseEntity.ok(carritoModelAssembler.toModel(actualizado));
+        if (existente == null) {
+            return ResponseEntity.notFound().build();
         }
-        return ResponseEntity.notFound().build();
+
+        Usuario usuario = usuarioService.findById(carrito.getUsuario().getId()).orElse(null);
+        Producto producto = productoService.findById(carrito.getProducto().getId());
+
+        if (usuario == null || producto == null) {
+            return ResponseEntity.badRequest().body("Usuario o producto inexistente");
+        }
+
+        carrito.setId(id);
+        carrito.setUsuario(usuario);
+        carrito.setProducto(producto);
+
+        Carrito actualizado = carritoService.save(carrito);
+        return ResponseEntity.ok(carritoModelAssembler.toModel(actualizado));
     }
 
     @Operation(

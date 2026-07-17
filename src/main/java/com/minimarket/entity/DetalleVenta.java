@@ -34,47 +34,31 @@ public class DetalleVenta {
     private Integer cantidad;
 
     @Column(nullable = false)
-    @Schema(description = "Precio unitario del producto al momento de la venta", example = "1200.0")
+    @Schema(description = "Precio unitario del producto al momento de la venta (sin descuento)", example = "1200.0")
     private Double precio;
 
+    // --- NUEVOS CAMPOS: trazabilidad de promociones aplicadas ---
+    @Column(nullable = false)
+    @Schema(description = "Descuento por unidad aplicado (0.0 si no hubo promoción vigente)", example = "180.0", accessMode = Schema.AccessMode.READ_ONLY)
+    private Double descuentoUnitario = 0.0;
+
+    @Column(nullable = true)
+    @Schema(description = "ID de la promoción aplicada a esta línea, o null si no aplicó ninguna", example = "2", accessMode = Schema.AccessMode.READ_ONLY)
+    private Long promocionAplicadaId;
+
     // Getters y Setters
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public Venta getVenta() {
-        return venta;
-    }
-
-    public void setVenta(Venta venta) {
-        this.venta = venta;
-    }
-
-    public Producto getProducto() {
-        return producto;
-    }
-
-    public void setProducto(Producto producto) {
-        this.producto = producto;
-    }
-
-    public Integer getCantidad() {
-        return cantidad;
-    }
-
-    public void setCantidad(Integer cantidad) {
-        this.cantidad = cantidad;
-    }
-
-    public Double getPrecio() {
-        return precio;
-    }
-
-    public void setPrecio(Double precio) {
-        this.precio = precio;
-    }
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+    public Venta getVenta() { return venta; }
+    public void setVenta(Venta venta) { this.venta = venta; }
+    public Producto getProducto() { return producto; }
+    public void setProducto(Producto producto) { this.producto = producto; }
+    public Integer getCantidad() { return cantidad; }
+    public void setCantidad(Integer cantidad) { this.cantidad = cantidad; }
+    public Double getPrecio() { return precio; }
+    public void setPrecio(Double precio) { this.precio = precio; }
+    public Double getDescuentoUnitario() { return descuentoUnitario; }
+    public void setDescuentoUnitario(Double descuentoUnitario) { this.descuentoUnitario = descuentoUnitario; }
+    public Long getPromocionAplicadaId() { return promocionAplicadaId; }
+    public void setPromocionAplicadaId(Long promocionAplicadaId) { this.promocionAplicadaId = promocionAplicadaId; }
 }

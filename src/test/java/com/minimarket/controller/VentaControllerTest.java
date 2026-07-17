@@ -16,6 +16,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import com.minimarket.entity.Sucursal;
+import com.minimarket.entity.TipoEntrega;
+
 
 import java.util.List;
 
@@ -49,7 +52,7 @@ class VentaControllerTest {
     void setUp() {
         mockMvc = MockMvcBuilders.standaloneSetup(ventaController).build();
         objectMapper = new ObjectMapper();
-        
+
         Usuario usuario = new Usuario();
         usuario.setId(1L);
 
@@ -60,15 +63,22 @@ class VentaControllerTest {
         detalle.setProducto(producto);
         detalle.setCantidad(2);
 
+        // ↓↓↓ AGREGAR
+        Sucursal sucursal = new Sucursal();
+        sucursal.setId(1L);
+        // ↑↑↑ AGREGAR
+
         venta = new Venta();
         venta.setId(1L);
         venta.setUsuario(usuario);
+        venta.setSucursal(sucursal);                      
+        venta.setTipoEntrega(TipoEntrega.RETIRO_TIENDA);  
         venta.setDetalles(List.of(detalle));
 
-        
         lenient().when(assembler.toModel(any(Venta.class)))
-                 .thenAnswer(invocation -> EntityModel.of(new VentaResponseDTO()));
+                .thenAnswer(invocation -> EntityModel.of(new VentaResponseDTO()));
     }
+
 
     @Test
     void testListarVentas() throws Exception {

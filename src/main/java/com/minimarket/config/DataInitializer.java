@@ -27,6 +27,13 @@ public class DataInitializer {
                     .orElseGet(() -> rolRepository.save(crearRol("ROLE_EMPLEADO")));
             Rol rolCliente = rolRepository.findByNombre("ROLE_CLIENTE")
                     .orElseGet(() -> rolRepository.save(crearRol("ROLE_CLIENTE")));
+            // Roles usados por SucursalController/ProveedorController/OrdenCompraController
+            // (@PreAuthorize hasAnyRole('GERENTE','JEFE_TURNO','REPONEDOR')) que antes
+            // nunca se creaban, dejando esos accesos inalcanzables salvo para GERENTE.
+            Rol rolJefeTurno = rolRepository.findByNombre("ROLE_JEFE_TURNO")
+                    .orElseGet(() -> rolRepository.save(crearRol("ROLE_JEFE_TURNO")));
+            Rol rolReponedor = rolRepository.findByNombre("ROLE_REPONEDOR")
+                    .orElseGet(() -> rolRepository.save(crearRol("ROLE_REPONEDOR")));
 
             // Crear usuario gerente de prueba
             if (usuarioRepository.findByUsername("gerente").isEmpty()) {
@@ -73,7 +80,37 @@ public class DataInitializer {
                 usuarioRepository.save(cliente);
             }
 
-            System.out.println("Datos de prueba cargados: gerente/empleado/cliente");
+            // Crear usuario jefe de turno de prueba
+            if (usuarioRepository.findByUsername("jefeturno").isEmpty()) {
+                Usuario jefeTurno = new Usuario();
+                jefeTurno.setUsername("jefeturno");
+                jefeTurno.setPassword(passwordEncoder.encode("jefeturno123"));
+                jefeTurno.setNombre("Marcela");
+                jefeTurno.setApellido("Rojas");
+                jefeTurno.setEmail("jefeturno@minimarket.cl");
+                jefeTurno.setDireccion("Av. Vicuña Mackenna 2200, Santiago");
+                Set<Rol> roles = new HashSet<>();
+                roles.add(rolJefeTurno);
+                jefeTurno.setRoles(roles);
+                usuarioRepository.save(jefeTurno);
+            }
+
+            // Crear usuario reponedor de prueba
+            if (usuarioRepository.findByUsername("reponedor").isEmpty()) {
+                Usuario reponedor = new Usuario();
+                reponedor.setUsername("reponedor");
+                reponedor.setPassword(passwordEncoder.encode("reponedor123"));
+                reponedor.setNombre("Luis");
+                reponedor.setApellido("Muñoz");
+                reponedor.setEmail("reponedor@minimarket.cl");
+                reponedor.setDireccion("Calle San Diego 890, Santiago");
+                Set<Rol> roles = new HashSet<>();
+                roles.add(rolReponedor);
+                reponedor.setRoles(roles);
+                usuarioRepository.save(reponedor);
+            }
+
+            System.out.println("Datos de prueba cargados: gerente/empleado/cliente/jefeturno/reponedor");
         };
     }
 
