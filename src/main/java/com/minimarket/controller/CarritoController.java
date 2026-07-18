@@ -26,6 +26,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import com.minimarket.dto.CarritoResponseDTO;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -61,8 +62,8 @@ public class CarritoController {
     })
     @GetMapping
     @PreAuthorize("hasAnyRole('CLIENTE', 'EMPLEADO', 'GERENTE')")
-    public CollectionModel<EntityModel<Carrito>> listarCarrito() {
-        List<EntityModel<Carrito>> carritos = carritoService.findAll().stream()
+    public CollectionModel<EntityModel<CarritoResponseDTO>> listarCarrito() {
+        List<EntityModel<CarritoResponseDTO>> carritos = carritoService.findAll().stream()
                 .map(carritoModelAssembler::toModel)
                 .collect(Collectors.toList());
 
@@ -84,7 +85,7 @@ public class CarritoController {
     })
     @GetMapping("/{id}")
     @PreAuthorize("hasAnyRole('CLIENTE', 'EMPLEADO', 'GERENTE')")
-    public ResponseEntity<EntityModel<Carrito>> obtenerCarritoPorId(
+    public ResponseEntity<EntityModel<CarritoResponseDTO>> obtenerCarritoPorId(
             @Parameter(description = "Identificador único del registro en el carrito", example = "1", required = true)
             @PathVariable Long id) {
         Carrito carrito = carritoService.findById(id);
@@ -127,7 +128,7 @@ public class CarritoController {
         carrito.setProducto(producto);
 
         Carrito guardado = carritoService.save(carrito);
-        EntityModel<Carrito> model = carritoModelAssembler.toModel(guardado);
+        EntityModel<CarritoResponseDTO> model = carritoModelAssembler.toModel(guardado);
         return ResponseEntity
                 .created(linkTo(methodOn(CarritoController.class).obtenerCarritoPorId(guardado.getId())).toUri())
                 .body(model);

@@ -4,6 +4,8 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.*;
 import java.util.Set;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 @Entity
 @Schema(description = "Entidad que representa un rol de seguridad en el sistema")
 public class Rol {
@@ -18,7 +20,8 @@ public class Rol {
     private String nombre;
 
     @ManyToMany(mappedBy = "roles")
-    @Schema(hidden = true) // Lo ocultamos para que Swagger no haga un bucle infinito mostrando a los usuarios
+    @JsonIgnore
+    @Schema(hidden = true)
     private Set<Usuario> usuarios;
 
     // Getters y Setters

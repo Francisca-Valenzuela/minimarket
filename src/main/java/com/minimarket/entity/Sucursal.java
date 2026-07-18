@@ -5,6 +5,8 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 @Entity
 @Schema(description = "Representa una sucursal física del minimarket")
 public class Sucursal {
@@ -35,6 +37,7 @@ public class Sucursal {
     private Boolean activa = true;
 
     @OneToMany(mappedBy = "sucursal", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
     @Schema(description = "Lista de stocks por producto en esta sucursal")
     private List<StockSucursal> stocks;
 

@@ -1,5 +1,7 @@
 package com.minimarket.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Min;
@@ -24,13 +26,15 @@ public class StockSucursal {
     @NotNull(message = "La sucursal no puede ser nula")
     @ManyToOne
     @JoinColumn(name = "sucursal_id", nullable = false)
-    @Schema(description = "Sucursal a la que pertenece este stock")
+    @JsonIgnore
+    @Schema(description = "Sucursal a la que pertenece este stock", hidden = true)
     private Sucursal sucursal;
 
     @NotNull(message = "El producto no puede ser nulo")
     @ManyToOne
     @JoinColumn(name = "producto_id", nullable = false)
-    @Schema(description = "Producto al que corresponde este stock")
+    @JsonIgnore
+    @Schema(description = "Producto al que corresponde este stock", hidden = true)
     private Producto producto;
 
     @Min(value = 0, message = "El stock no puede ser negativo")
